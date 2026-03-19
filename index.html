@@ -1,1024 +1,3691 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TaxCalc NTA 2025 — Nigeria Personal Income Tax Calculator</title>
-  <link rel="icon" href="assets/favicon.png">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-
-  <!-- =====================
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaxCalc NTA 2025 — Nigeria Personal Income Tax Calculator</title>
+    <link rel="icon" href="assets/favicon.png" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  </head>
+  <body>
+    <!-- =====================
        AUTH OVERLAY
        ===================== -->
-  <div class="auth-overlay" id="authOverlay" style="display:none;">
-    <div class="auth-card">
-      <div class="auth-card-header">
-        <div class="auth-logo">
-          <span class="logo-mark">₦</span>
-          <div>
-            <span class="auth-logo-text">TaxCalc</span>
-            <span class="auth-logo-sub">NTA 2025</span>
+    <div class="auth-overlay" id="authOverlay" style="display: none">
+      <div class="auth-card">
+        <div class="auth-card-header">
+          <div class="auth-logo">
+            <span class="logo-mark">₦</span>
+            <div>
+              <span class="auth-logo-text">TaxCalc</span>
+              <span class="auth-logo-sub">NTA 2025</span>
+            </div>
           </div>
-        </div>
-        <button class="auth-close" onclick="hideAuthOverlay()" title="Back to home">✕</button>
-      </div>
-
-      <!-- LOGIN -->
-      <div class="auth-panel" id="loginPanel">
-        <h2 class="auth-title">Welcome back</h2>
-        <p class="auth-sub">Sign in to access your private tax calculations</p>
-        <div class="auth-field">
-          <label>Email Address</label>
-          <input type="email" autocomplete="email" id="loginEmail" placeholder="you@example.com" />
-        </div>
-        <div class="auth-field">
-          <label>Password</label>
-          <input type="password" autocomplete="current-password" id="loginPassword" placeholder="••••••••" />
-        </div>
-        <p class="auth-error hidden" id="loginError"></p>
-        <button class="auth-btn primary" id="loginBtn" onclick="doLogin()">Sign In</button>
-        <div class="auth-links">
-          <button class="auth-link" onclick="showPanel('resetPanel')">Forgot password?</button>
-          <button class="auth-link" onclick="showPanel('registerPanel')">Create account →</button>
-        </div>
-      </div>
-
-      <!-- REGISTER -->
-      <div class="auth-panel hidden" id="registerPanel">
-        <h2 class="auth-title">Create account</h2>
-        <p class="auth-sub">Your calculations will be private to you only</p>
-
-        <div class="auth-field">
-          <label>Full Name</label>
-          <input type="text" id="regName" placeholder="John Adewale" autocomplete="name" />
-        </div>
-        <div class="auth-field">
-          <label>Email Address</label>
-          <input type="email" autocomplete="email" id="regEmail" placeholder="you@example.com" />
-        </div>
-        <div class="auth-field">
-          <label>Password</label>
-          <input type="password" autocomplete="new-password" id="regPassword" placeholder="Min. 6 characters" />
-        </div>
-
-        <div class="auth-field">
-          <label>I am a/an…</label>
-          <div class="role-grid">
-            <button type="button" class="role-card" data-role="employee" onclick="selectRole(this)">
-              <span class="role-icon">👤</span>
-              <span class="role-label">Employee</span>
-              <span class="role-desc">Check my own take-home pay</span>
-            </button>
-            <button type="button" class="role-card" data-role="hr_manager" onclick="selectRole(this)">
-              <span class="role-icon">🏢</span>
-              <span class="role-label">HR / Payroll Manager</span>
-              <span class="role-desc">Process staff payroll</span>
-            </button>
-            <button type="button" class="role-card" data-role="business_owner" onclick="selectRole(this)">
-              <span class="role-icon">💼</span>
-              <span class="role-label">Business Owner</span>
-              <span class="role-desc">Manage my team's payroll</span>
-            </button>
-            <button type="button" class="role-card" data-role="tax_consultant" onclick="selectRole(this)">
-              <span class="role-icon">📋</span>
-              <span class="role-label">Tax Consultant</span>
-              <span class="role-desc">Calculate for my clients</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="auth-field hidden" id="companyField">
-          <label>Company / Organisation Name <span style="opacity:0.4;font-size:11px;">(optional)</span></label>
-          <input type="text" id="regCompany" placeholder="e.g. Zenith Bank PLC" autocomplete="organization" />
-        </div>
-
-        <p class="auth-error hidden" id="registerError"></p>
-        <button class="auth-btn primary" id="registerBtn" onclick="doRegister()">Create Account</button>
-        <div class="auth-links">
-          <button class="auth-link" onclick="showPanel('loginPanel')">← Back to sign in</button>
-        </div>
-      </div>
-
-      <!-- RESET -->
-      <div class="auth-panel hidden" id="resetPanel">
-        <h2 class="auth-title">Reset password</h2>
-        <p class="auth-sub">Enter your email and we'll send a reset link</p>
-        <div class="auth-field">
-          <label>Email Address</label>
-          <input type="email" autocomplete="email" id="resetEmail" placeholder="you@example.com" />
-        </div>
-        <p class="auth-error hidden" id="resetError"></p>
-        <p class="auth-success-msg hidden" id="resetSuccess"></p>
-        <button class="auth-btn primary" id="resetBtn" onclick="doReset()">Send Reset Link</button>
-        <div class="auth-links">
-          <button class="auth-link" onclick="showPanel('loginPanel')">← Back to sign in</button>
-        </div>
-      </div>
-
-      <!-- SUCCESS -->
-      <div class="auth-panel hidden" id="successPanel">
-        <div class="auth-success-icon">✓</div>
-        <h2 class="auth-title">Check your email</h2>
-        <p class="auth-sub">We sent a confirmation link to your email. Click it to activate your account, then come back to sign in.</p>
-        <button class="auth-btn primary" onclick="showPanel('loginPanel')">Back to Sign In</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- =====================
-       HEADER
-       ===================== -->
-  <header class="site-header" id="siteHeader">
-    <div class="header-inner">
-      <a class="logo" href="#home" onclick="scrollToSection('home')">
-        <span class="logo-mark">₦</span>
-        <span class="logo-text">TaxCalc <em>NTA 2025</em></span>
-      </a>
-
-      <!-- Mobile hamburger -->
-      <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileNav()" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
-
-      <!-- Nav: shown when NOT logged in -->
-      <nav class="header-nav" id="guestNav">
-        <a class="nav-link" onclick="scrollToSection('how-it-works')">How it works</a>
-        <a class="nav-link" onclick="scrollToSection('features')">Features</a>
-        <a class="nav-link" onclick="scrollToSection('who-its-for')">Who it's for</a>
-        <button class="nav-btn outline" onclick="showAuthOverlay('loginPanel')">Sign In</button>
-        <button class="nav-btn filled" onclick="showAuthOverlay('registerPanel')">Get Started Free</button>
-      </nav>
-
-      <!-- Nav: shown when logged in -->
-      <div class="header-right hidden" id="userNav">
-        <a class="nav-link light user-nav-link" data-section="calculator" onclick="showAppSection('calculator')">Calculator</a>
-        <a class="nav-link light user-nav-link" data-section="history" onclick="showAppSection('history')">History</a>
-        <a class="nav-link light user-nav-link" data-section="payroll" onclick="showAppSection('payroll')">Payroll</a>
-        <a class="nav-link light user-nav-link" data-section="cit" onclick="showAppSection('cit')" id="citNavLink">Business Tax</a>
-        <a class="nav-link light user-nav-link" data-section="info" onclick="showAppSection('info')">Info</a>
-        <div class="user-info">
-          <span class="user-avatar" id="userAvatar">?</span>
-          <div class="user-info-text">
-            <span class="user-email" id="userEmail"></span>
-            <span class="user-role-badge" id="userRoleBadge" data-role="employee">Employee</span>
-          </div>
-        </div>
-        <div class="user-menu-wrap">
-          <button class="logout-btn" onclick="doLogout()">Sign Out</button>
-          <button class="delete-account-btn" onclick="deleteAccount()" title="Delete my account">🗑</button>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- =====================
-       SECTION 1: LANDING HERO
-       ===================== -->
-  <section class="landing-hero" id="home">
-    <div class="landing-hero-bg"></div>
-    <div class="landing-hero-inner">
-      <div class="landing-hero-content">
-        <div class="landing-tag">
-          <span class="tag-dot"></span>
-          Nigeria Tax Act 2025 — Now in Effect
-        </div>
-        <h1 class="landing-title">
-          Know Exactly<br/>
-          What You<br/>
-          <span class="landing-accent">Take Home</span>
-        </h1>
-        <p class="landing-sub">
-          Calculate your PAYE tax under the new NTA 2025 in seconds. Compare with the old regime, see every deduction, and export a clean PDF. Private to you alone.
-        </p>
-        <div class="landing-ctas">
-          <button class="cta-primary" onclick="showAuthOverlay('registerPanel')">
-            Start Calculating Free
-            <span class="cta-arrow">→</span>
+          <button
+            class="auth-close"
+            onclick="hideAuthOverlay()"
+            title="Back to home"
+          >
+            ✕
           </button>
-          <button class="cta-secondary" onclick="showAuthOverlay('loginPanel')">
+        </div>
+
+        <!-- LOGIN -->
+        <div class="auth-panel" id="loginPanel">
+          <h2 class="auth-title">Welcome back</h2>
+          <p class="auth-sub">
+            Sign in to access your private tax calculations
+          </p>
+          <div class="auth-field">
+            <label>Email Address</label>
+            <input
+              type="email"
+              autocomplete="email"
+              id="loginEmail"
+              placeholder="you@example.com"
+            />
+          </div>
+          <div class="auth-field">
+            <label>Password</label>
+            <input
+              type="password"
+              autocomplete="current-password"
+              id="loginPassword"
+              placeholder="••••••••"
+            />
+          </div>
+          <p class="auth-error hidden" id="loginError"></p>
+          <button class="auth-btn primary" id="loginBtn" onclick="doLogin()">
             Sign In
           </button>
-        </div>
-        <p class="landing-note">No credit card. No hidden fees. Private by default.</p>
-      </div>
-
-      <div class="landing-hero-preview">
-        <div class="preview-card demo-card">
-          <div class="demo-card-header">
-            <div class="demo-badge-row">
-              <span class="preview-badge nta">NTA 2025</span>
-              <span class="demo-live-dot"></span>
-              <span class="demo-live-label">Live Demo</span>
-            </div>
-            <span class="demo-hint">No sign-up needed</span>
-          </div>
-
-          <div class="demo-input-row">
-            <label>Monthly Basic Salary</label>
-            <div class="demo-input-wrap">
-              <span class="demo-currency">₦</span>
-              <input type="number" id="demoBasic" class="demo-input" placeholder="800,000" min="0" oninput="runDemo()" />
-            </div>
-          </div>
-          <div class="demo-input-row">
-            <label>Housing + Transport + Other</label>
-            <div class="demo-input-wrap">
-              <span class="demo-currency">₦</span>
-              <input type="number" id="demoAllowances" class="demo-input" placeholder="400,000" min="0" oninput="runDemo()" />
-            </div>
-          </div>
-
-          <div class="demo-results" id="demoResults">
-            <div class="demo-result-row">
-              <span>Gross Pay / Month</span>
-              <span id="demoGross" class="demo-val">—</span>
-            </div>
-            <div class="demo-result-row">
-              <span>Total Deductions</span>
-              <span id="demoDeductions" class="demo-val demo-red">—</span>
-            </div>
-            <div class="demo-result-row demo-paye-row">
-              <span>PAYE Tax / Month</span>
-              <span id="demoPaye" class="demo-val demo-red">—</span>
-            </div>
-            <div class="demo-result-row demo-net-row">
-              <span>Take-Home / Month</span>
-              <span id="demoNet" class="demo-val demo-green">—</span>
-            </div>
-            <div class="demo-result-row">
-              <span>Effective Tax Rate</span>
-              <span id="demoRate" class="demo-val">—</span>
-            </div>
-          </div>
-
-          <div class="demo-cta-row">
-            <p class="demo-cta-text">Save results, view full breakdown & export PDF</p>
-            <button class="demo-cta-btn" onclick="showAuthOverlay('registerPanel')">Register Free →</button>
+          <div class="auth-links">
+            <button class="auth-link" onclick="showPanel('resetPanel')">
+              Forgot password?
+            </button>
+            <button class="auth-link" onclick="showPanel('registerPanel')">
+              Create account →
+            </button>
           </div>
         </div>
-        <div class="preview-glow"></div>
+
+        <!-- REGISTER -->
+        <div class="auth-panel hidden" id="registerPanel">
+          <h2 class="auth-title">Create account</h2>
+          <p class="auth-sub">Your calculations will be private to you only</p>
+
+          <div class="auth-field">
+            <label>Full Name</label>
+            <input
+              type="text"
+              id="regName"
+              placeholder="John Adewale"
+              autocomplete="name"
+            />
+          </div>
+          <div class="auth-field">
+            <label>Email Address</label>
+            <input
+              type="email"
+              autocomplete="email"
+              id="regEmail"
+              placeholder="you@example.com"
+            />
+          </div>
+          <div class="auth-field">
+            <label>Password</label>
+            <input
+              type="password"
+              autocomplete="new-password"
+              id="regPassword"
+              placeholder="Min. 6 characters"
+            />
+          </div>
+
+          <div class="auth-field">
+            <label>I am a/an…</label>
+            <div class="role-grid">
+              <button
+                type="button"
+                class="role-card"
+                data-role="employee"
+                onclick="selectRole(this)"
+              >
+                <span class="role-icon"><i data-lucide="user"></i></span>
+                <span class="role-label">Employee</span>
+                <span class="role-desc">Check my own take-home pay</span>
+              </button>
+              <button
+                type="button"
+                class="role-card"
+                data-role="hr_manager"
+                onclick="selectRole(this)"
+              >
+                <span class="role-icon"><i data-lucide="building-2"></i></span>
+                <span class="role-label">HR / Payroll Manager</span>
+                <span class="role-desc">Process staff payroll</span>
+              </button>
+              <button
+                type="button"
+                class="role-card"
+                data-role="business_owner"
+                onclick="selectRole(this)"
+              >
+                <span class="role-icon"><i data-lucide="briefcase"></i></span>
+                <span class="role-label">Business Owner</span>
+                <span class="role-desc">Manage my team's payroll</span>
+              </button>
+              <button
+                type="button"
+                class="role-card"
+                data-role="tax_consultant"
+                onclick="selectRole(this)"
+              >
+                <span class="role-icon"
+                  ><i data-lucide="clipboard-list"></i
+                ></span>
+                <span class="role-label">Accountant</span>
+                <span class="role-desc">Calculate for my clients</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-field hidden" id="companyField">
+            <label
+              >Company / Organisation Name
+              <span style="opacity: 0.4; font-size: 11px"
+                >(optional)</span
+              ></label
+            >
+            <input
+              type="text"
+              id="regCompany"
+              placeholder="e.g. Zenith Bank PLC"
+              autocomplete="organization"
+            />
+          </div>
+
+          <p class="auth-error hidden" id="registerError"></p>
+          <button
+            class="auth-btn primary"
+            id="registerBtn"
+            onclick="doRegister()"
+          >
+            Create Account
+          </button>
+          <div class="auth-links">
+            <button class="auth-link" onclick="showPanel('loginPanel')">
+              ← Back to sign in
+            </button>
+          </div>
+        </div>
+
+        <!-- RESET -->
+        <div class="auth-panel hidden" id="resetPanel">
+          <h2 class="auth-title">Reset password</h2>
+          <p class="auth-sub">Enter your email and we'll send a reset link</p>
+          <div class="auth-field">
+            <label>Email Address</label>
+            <input
+              type="email"
+              autocomplete="email"
+              id="resetEmail"
+              placeholder="you@example.com"
+            />
+          </div>
+          <p class="auth-error hidden" id="resetError"></p>
+          <p class="auth-success-msg hidden" id="resetSuccess"></p>
+          <button class="auth-btn primary" id="resetBtn" onclick="doReset()">
+            Send Reset Link
+          </button>
+          <div class="auth-links">
+            <button class="auth-link" onclick="showPanel('loginPanel')">
+              ← Back to sign in
+            </button>
+          </div>
+        </div>
+
+        <!-- SUCCESS -->
+        <div class="auth-panel hidden" id="successPanel">
+          <div class="auth-success-icon">✓</div>
+          <h2 class="auth-title">Check your email</h2>
+          <p class="auth-sub">
+            We sent a confirmation link to your email. Click it to activate your
+            account, then come back to sign in.
+          </p>
+          <button class="auth-btn primary" onclick="showPanel('loginPanel')">
+            Back to Sign In
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Scroll indicator -->
-    <div class="scroll-indicator">
-      <span>Scroll to explore</span>
-      <div class="scroll-dot"></div>
-    </div>
-  </section>
+    <!-- =====================
+       HEADER
+       ===================== -->
+    <header class="site-header" id="siteHeader">
+      <div class="header-inner">
+        <a class="logo" href="#home" onclick="scrollToSection('home')">
+          <span class="logo-mark">₦</span>
+          <span class="logo-text">TaxCalc <em>NTA 2025</em></span>
+        </a>
 
-  <!-- =====================
+        <!-- Mobile hamburger -->
+        <button
+          class="hamburger"
+          id="hamburgerBtn"
+          onclick="toggleMobileNav()"
+          aria-label="Menu"
+        >
+          <span></span><span></span><span></span>
+        </button>
+
+        <!-- Nav: shown when NOT logged in -->
+        <nav class="header-nav" id="guestNav">
+          <a
+            class="nav-link"
+            data-section="how-it-works"
+            onclick="scrollToSection('how-it-works')"
+            >How it works</a
+          >
+          <a
+            class="nav-link"
+            data-section="features"
+            onclick="scrollToSection('features')"
+            >Features</a
+          >
+          <a
+            class="nav-link"
+            data-section="who-its-for"
+            onclick="scrollToSection('who-its-for')"
+            >Who it's for</a
+          >
+          <a
+            class="nav-link"
+            data-section="about"
+            onclick="scrollToSection('about')"
+            >About</a
+          >
+          <a
+            class="nav-link"
+            data-section="blog"
+            onclick="scrollToSection('blog')"
+            >Blog</a
+          >
+          <a
+            class="nav-link"
+            data-section="contact"
+            onclick="scrollToSection('contact')"
+            >Contact</a
+          >
+          <button
+            class="nav-btn outline"
+            onclick="showAuthOverlay('loginPanel')"
+          >
+            Sign In
+          </button>
+          <button
+            class="nav-btn filled"
+            onclick="showAuthOverlay('registerPanel')"
+          >
+            Get Started Free
+          </button>
+        </nav>
+
+        <!-- Nav: shown when logged in -->
+        <div class="header-right hidden" id="userNav">
+          <a
+            class="nav-link light user-nav-link"
+            data-section="calculator"
+            onclick="showAppSection('calculator')"
+            >Calculator</a
+          >
+          <a
+            class="nav-link light user-nav-link"
+            data-section="ytd"
+            onclick="showAppSection('ytd')"
+            >YTD</a
+          >
+          <a
+            class="nav-link light user-nav-link"
+            data-section="history"
+            onclick="showAppSection('history')"
+            >History</a
+          >
+          <a
+            class="nav-link light user-nav-link"
+            data-section="payroll"
+            onclick="showAppSection('payroll')"
+            >Payroll</a
+          >
+
+          <!-- Business dropdown — visible to business_owner + tax_consultant -->
+          <div class="biz-dropdown" id="bizDropdown" style="display: none">
+            <button
+              class="nav-link light biz-dropdown-trigger"
+              id="bizDropdownTrigger"
+              onclick="toggleBizDropdown(event)"
+            >
+              Business <span class="biz-chevron">▾</span>
+            </button>
+            <div class="biz-dropdown-menu" id="bizDropdownMenu">
+              <a
+                class="biz-dropdown-item user-nav-link"
+                id="citNavLink"
+                data-section="cit"
+                onclick="
+                  showAppSection('cit');
+                  closeBizDropdown();
+                "
+              >
+                <i data-lucide="landmark"></i> Business Tax
+                <span class="biz-item-sub">CIT &amp; Dev Levy</span>
+              </a>
+              <a
+                class="biz-dropdown-item user-nav-link"
+                id="clientsNavLink"
+                data-section="clients"
+                onclick="
+                  showAppSection('clients');
+                  loadClientProfiles();
+                  closeBizDropdown();
+                "
+                style="display: none"
+              >
+                <i data-lucide="users"></i> Clients
+                <span class="biz-item-sub">Saved profiles</span>
+              </a>
+              <a
+                class="biz-dropdown-item user-nav-link"
+                id="bizSummaryNavLink"
+                data-section="bizsummary"
+                onclick="
+                  showAppSection('bizsummary');
+                  closeBizDropdown();
+                "
+              >
+                <i data-lucide="bar-chart-2"></i> Tax Summary
+                <span class="biz-item-sub">Combined report</span>
+              </a>
+              <a
+                class="biz-dropdown-item user-nav-link"
+                id="vatNavLink"
+                data-section="vat"
+                onclick="
+                  showAppSection('vat');
+                  closeBizDropdown();
+                "
+              >
+                <i data-lucide="banknote"></i> VAT
+                <span class="biz-item-sub">Value Added Tax</span>
+              </a>
+              <div
+                class="biz-dropdown-divider"
+                id="clientsDivider"
+                style="display: none"
+              ></div>
+            </div>
+          </div>
+
+          <div class="user-info">
+            <span class="user-avatar" id="userAvatar">?</span>
+            <div class="user-info-text">
+              <span class="user-email" id="userEmail"></span>
+              <span
+                class="user-role-badge"
+                id="userRoleBadge"
+                data-role="employee"
+                >Employee</span
+              >
+            </div>
+          </div>
+          <div class="user-menu-wrap">
+            <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+            <button
+              class="delete-account-btn"
+              onclick="deleteAccount()"
+              title="Delete my account"
+            >
+              <i data-lucide="trash-2"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- =====================
+       SECTION 1: LANDING HERO
+       ===================== -->
+    <section class="landing-hero" id="home">
+      <div class="landing-hero-bg"></div>
+      <div class="landing-hero-inner">
+        <div class="landing-hero-content">
+          <div class="landing-tag">
+            <span class="tag-dot"></span>
+            Nigeria Tax Act 2025 — Now in Effect
+          </div>
+          <h1 class="landing-title">Know Your True Take-Home.</h1>
+          <p class="landing-sub">
+            TaxCalc is your weekly companion for surviving the NTA 2025 rules —
+            calculate your PAYE, compare old vs new, run payroll, and export
+            reports your accountant will actually use.
+          </p>
+          <div class="landing-ctas">
+            <button
+              class="cta-primary"
+              onclick="showAuthOverlay('registerPanel')"
+            >
+              Start Calculating Free <span class="cta-arrow">→</span>
+            </button>
+            <button
+              class="cta-secondary"
+              onclick="showAuthOverlay('loginPanel')"
+            >
+              Sign In
+            </button>
+          </div>
+          <p class="landing-note">
+            No credit card. No hidden fees. Private by default.
+          </p>
+        </div>
+
+        <div class="landing-hero-preview">
+          <div class="preview-card demo-card">
+            <div class="demo-card-header">
+              <div class="demo-badge-row">
+                <span class="preview-badge nta">NTA 2025</span>
+                <span class="demo-live-dot"></span>
+                <span class="demo-live-label">Live Demo</span>
+              </div>
+              <span class="demo-hint">No sign-up needed</span>
+            </div>
+
+            <div class="demo-input-row">
+              <label>Monthly Basic Salary</label>
+              <div class="demo-input-wrap">
+                <span class="demo-currency">₦</span>
+                <input
+                  type="number"
+                  id="demoBasic"
+                  class="demo-input"
+                  placeholder="800,000"
+                  min="0"
+                  oninput="runDemo()"
+                />
+              </div>
+            </div>
+            <div class="demo-input-row">
+              <label>Housing + Transport + Other</label>
+              <div class="demo-input-wrap">
+                <span class="demo-currency">₦</span>
+                <input
+                  type="number"
+                  id="demoAllowances"
+                  class="demo-input"
+                  placeholder="400,000"
+                  min="0"
+                  oninput="runDemo()"
+                />
+              </div>
+            </div>
+
+            <div class="demo-results" id="demoResults">
+              <div class="demo-result-row">
+                <span>Gross Pay / Month</span>
+                <span id="demoGross" class="demo-val">—</span>
+              </div>
+              <div class="demo-result-row">
+                <span>Total Deductions</span>
+                <span id="demoDeductions" class="demo-val demo-red">—</span>
+              </div>
+              <div class="demo-result-row demo-paye-row">
+                <span>PAYE Tax / Month</span>
+                <span id="demoPaye" class="demo-val demo-red">—</span>
+              </div>
+              <div class="demo-result-row demo-net-row">
+                <span>Take-Home / Month</span>
+                <span id="demoNet" class="demo-val demo-green">—</span>
+              </div>
+              <div class="demo-result-row">
+                <span>Effective Tax Rate</span>
+                <span id="demoRate" class="demo-val">—</span>
+              </div>
+            </div>
+
+            <div class="demo-cta-row">
+              <p class="demo-cta-text">Full breakdown, history & PDF export</p>
+              <button
+                class="demo-cta-btn"
+                onclick="showAuthOverlay('registerPanel')"
+              >
+                Register Free →
+              </button>
+            </div>
+          </div>
+          <div class="preview-glow"></div>
+        </div>
+      </div>
+
+      <!-- Scroll indicator -->
+      <div class="scroll-indicator">
+        <span>Scroll to explore</span>
+        <div class="scroll-dot"></div>
+      </div>
+    </section>
+
+    <!-- =====================
        SECTION 2: HOW IT WORKS
        ===================== -->
-  <section class="how-section" id="how-it-works">
-    <div class="lp-section-inner">
-      <div class="lp-section-label">Simple Process</div>
-      <h2 class="lp-section-title">How TaxCalc Works</h2>
-      <p class="lp-section-sub">Three steps to know your exact take-home pay under NTA 2025</p>
 
-      <div class="steps-grid">
-        <div class="step-card">
-          <div class="step-num">01</div>
-          <div class="step-icon">💼</div>
-          <h3>Enter Your Salary</h3>
-          <p>Input your basic salary, housing, transport, and other allowances. Toggle between monthly and annual input.</p>
-        </div>
-        <div class="step-card">
-          <div class="step-num">02</div>
-          <div class="step-icon">⚡</div>
-          <h3>Get Instant Results</h3>
-          <p>See your pension, NHF, NHIS deductions and PAYE tax calculated in real-time. Compare NTA 2025 vs old PITA.</p>
-        </div>
-        <div class="step-card">
-          <div class="step-num">03</div>
-          <div class="step-icon">📄</div>
-          <h3>Save & Export</h3>
-          <p>Save calculations to your private history or export a professional PDF. Your data is never visible to others.</p>
+    <section class="how-section" id="how-it-works">
+      <div class="lp-section-inner">
+        <div class="lp-section-label">Simple Process</div>
+        <h2 class="lp-section-title">How TaxCalc Works</h2>
+        <p class="lp-section-sub">
+          Three steps to know your exact take-home pay under NTA 2025
+        </p>
+
+        <div class="steps-grid">
+          <!-- STEP 1 -->
+          <div class="step-card">
+            <div class="step-num" data-n="1">Step one</div>
+            <div class="step-icon"><i data-lucide="pencil-line"></i></div>
+            <h3>Enter your salary</h3>
+            <p>
+              Basic, housing, transport, other allowances. Monthly or annual —
+              your choice. Add rent for the new NTA 2025 relief.
+            </p>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="step-card">
+            <div class="step-num" data-n="2">Step two</div>
+            <div class="step-icon"><i data-lucide="zap"></i></div>
+            <h3>Get results instantly</h3>
+            <p>
+              Pension, NHF, NHIS, and PAYE computed in real-time. Side-by-side
+              NTA 2025 vs old PITA comparison included.
+            </p>
+          </div>
+
+          <!-- STEP 3 -->
+          <div class="step-card">
+            <div class="step-num" data-n="3">Step three</div>
+            <div class="step-icon"><i data-lucide="file-down"></i></div>
+            <h3>Save and export</h3>
+            <p>
+              Save to private history or export a professional PDF with full
+              band workings. Your data is never visible to anyone else.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- =====================
+    <!-- =====================
        SECTION 3: FEATURES
        ===================== -->
-  <section class="features-section" id="features">
-    <div class="lp-section-inner">
-      <div class="lp-section-label light">What's Included</div>
-      <h2 class="lp-section-title light">Everything You Need</h2>
-      <p class="lp-section-sub light">Built specifically for Nigerian taxpayers under the new NTA 2025</p>
+    <section class="features-section" id="features">
+      <div class="lp-section-inner">
+        <div class="lp-section-label light">What's Included</div>
+        <h2 class="lp-section-title light">
+          Built for NTA 2025.<br />Nothing left out.
+        </h2>
+        <p class="lp-section-sub light">
+          Every tool you need to understand and act on Nigeria's new tax law
+        </p>
 
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">🏦</div>
-          <h3>NTA 2025 Tax Bands</h3>
-          <p>Full progressive tax band computation from 0% on the first ₦800,000 up to 25% above ₦40M.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">⚖️</div>
-          <h3>Old vs New Comparison</h3>
-          <p>Side-by-side comparison between NTA 2025 and the old PITA regime so you see exactly how you're affected.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🏠</div>
-          <h3>Rent Relief</h3>
-          <p>New NTA 2025 rent relief automatically calculated — up to ₦500,000 deducted from your taxable income.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📊</div>
-          <h3>All Statutory Deductions</h3>
-          <p>Pension, NHF, and NHIS contributions all auto-calculated to the correct percentages.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">📄</div>
-          <h3>PDF Export</h3>
-          <p>Generate a clean, printable tax computation document with your full breakdown and band workings.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">🔒</div>
-          <h3>Private History</h3>
-          <p>Save calculations securely. Your salary information is never visible to other users — guaranteed by Supabase RLS.</p>
+        <div class="features-grid">
+          <!-- Hero feature -->
+          <div class="feature-card feature-hero">
+            <div class="feature-icon"><i data-lucide="calculator"></i></div>
+            <h3>Live PAYE Calculator</h3>
+            <p>
+              Full NTA 2025 progressive band computation — 0% on your first
+              ₦800k, all the way to 25% above ₦40m. Compare against the old PITA
+              regime in real time. Every deduction shown, every band explained.
+            </p>
+            <div class="feature-hero-tags">
+              <span>Pension 8%</span><span>NHF 2.5%</span><span>NHIS 5%</span
+              ><span>Rent relief ₦500k</span>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="scale"></i></div>
+            <h3>Old vs New Comparison</h3>
+            <p>
+              Side-by-side NTA 2025 vs PITA so you see exactly how you're
+              affected.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="home"></i></div>
+            <h3>Rent Relief</h3>
+            <p>
+              Up to ₦500,000 off your taxable income automatically. Most
+              employees aren't claiming this yet.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="users"></i></div>
+            <h3>Payroll for Teams</h3>
+            <p>
+              Run multi-employee payroll. Export by month. Every staff member's
+              PAYE computed in one run.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="landmark"></i></div>
+            <h3>Business Tax (CIT)</h3>
+            <p>
+              Company income tax, tier classification, and the new 4%
+              consolidated Development Levy.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="shield-check"></i></div>
+            <h3>Private by Default</h3>
+            <p>
+              Row-level security — your salary data is mathematically impossible
+              for others to access.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i data-lucide="file-spreadsheet"></i>
+            </div>
+            <h3>PDF & Excel Export</h3>
+            <p>
+              Professional documents ready to send to auditors, your board, or
+              FIRS. One click.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><i data-lucide="banknote"></i></div>
+            <h3>VAT Tracker</h3>
+            <p>
+              Compute output vs input VAT, see your net remittance, and flag
+              zero-rated sales — all in one view.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- =====================
+    <!-- =====================
        SECTION 4: WHO IT'S FOR
        ===================== -->
-  <section class="who-section" id="who-its-for">
-    <div class="lp-section-inner">
-      <div class="lp-section-label">Use Cases</div>
-      <h2 class="lp-section-title">Who Uses TaxCalc?</h2>
+    <section class="who-section" id="who-its-for">
+      <div class="lp-section-inner">
+        <div class="lp-section-label">Use Cases</div>
+        <h2 class="lp-section-title">
+          Built for everyone<br />with a tax obligation.
+        </h2>
 
-      <div class="who-grid">
-        <div class="who-card">
-          <div class="who-emoji">👤</div>
-          <h3>Employees</h3>
-          <p>Understand your payslip. Know what PAYE your employer should be deducting and verify it's correct.</p>
-          <ul class="who-list">
-            <li>Verify monthly deductions</li>
-            <li>Plan salary negotiations</li>
-            <li>Understand rent relief savings</li>
-          </ul>
-        </div>
-        <div class="who-card featured">
-          <div class="who-tag">Most Popular</div>
-          <div class="who-emoji">🏢</div>
-          <h3>HR & Payroll Managers</h3>
-          <p>Quickly compute PAYE for employees during onboarding, salary reviews, or payroll processing.</p>
-          <ul class="who-list">
-            <li>Fast per-employee calculations</li>
-            <li>PDF computation for records</li>
-            <li>NTA 2025 vs PITA comparison</li>
-          </ul>
-        </div>
-        <div class="who-card">
-          <div class="who-emoji">📋</div>
-          <h3>Tax Consultants</h3>
-          <p>Calculate and present tax obligations to clients with professional PDF breakdowns and band workings.</p>
-          <ul class="who-list">
-            <li>Detailed band workings</li>
-            <li>Client-ready PDF exports</li>
-            <li>Save multiple client calculations</li>
-          </ul>
+        <div class="who-grid">
+          <div class="who-card">
+            <div class="who-emoji"><i data-lucide="user"></i></div>
+            <h3>Employees</h3>
+            <p>
+              Understand your payslip. Verify your employer is deducting the
+              right PAYE — and claim the rent relief most employers are still
+              missing.
+            </p>
+            <ul class="who-list">
+              <li>Check your monthly deductions</li>
+              <li>Plan salary negotiations with real numbers</li>
+              <li>See exactly what rent relief saves you</li>
+            </ul>
+          </div>
+          <div class="who-card featured">
+            <div class="who-tag">Most Popular</div>
+            <div class="who-emoji"><i data-lucide="building-2"></i></div>
+            <h3>HR & Payroll Managers</h3>
+            <p>
+              Run payroll for your whole team, compute PAYE per employee, and
+              export remittance-ready schedules — all compliant with NTA 2025.
+            </p>
+            <ul class="who-list">
+              <li>Fast per-employee calculations</li>
+              <li>Monthly payroll runs with history</li>
+              <li>PDF and Excel export for FIRS</li>
+            </ul>
+          </div>
+          <div class="who-card">
+            <div class="who-emoji"><i data-lucide="briefcase"></i></div>
+            <h3>Business Owners</h3>
+            <p>
+              Understand your CIT liability, compute the new Development Levy,
+              track VAT, and see your total business tax obligation in one view.
+            </p>
+            <ul class="who-list">
+              <li>CIT tier classification (Small / Medium / Large)</li>
+              <li>VAT tracking and monthly remittance</li>
+              <li>Combined business tax summary PDF</li>
+            </ul>
+          </div>
+          <div class="who-card">
+            <div class="who-emoji"><i data-lucide="clipboard-list"></i></div>
+            <h3>Accountants</h3>
+            <p>
+              Calculate PAYE for multiple clients, save profiles, and produce
+              audit-ready PDF computations with full NTA 2025 band workings.
+            </p>
+            <ul class="who-list">
+              <li>Client profile library</li>
+              <li>Audit-ready PDFs with band citations</li>
+              <li>Business tax summaries for board packs</li>
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- =====================
+    <!-- =====================
        SECTION 5: CTA BANNER
        ===================== -->
-  <section class="cta-section">
-    <div class="cta-bg"></div>
-    <div class="cta-inner">
-      <div class="cta-tag">Free to Use</div>
-      <h2 class="cta-title">Start calculating your<br/>take-home pay today</h2>
-      <p class="cta-sub">Join professionals across Nigeria using TaxCalc to understand their NTA 2025 obligations.</p>
-      <button class="cta-primary large" onclick="showAuthOverlay('registerPanel')">
-        Create Free Account
-        <span class="cta-arrow">→</span>
-      </button>
-      <p class="cta-note">Already have an account? <button class="inline-link" onclick="showAuthOverlay('loginPanel')">Sign in here</button></p>
-    </div>
-  </section>
+    <section class="cta-section">
+      <div class="cta-bg"></div>
+      <div class="cta-inner">
+        <div class="cta-tag">Free. Always.</div>
+        <h2 class="cta-title">
+          Your first NTA 2025<br />calculation is one click away.
+        </h2>
+        <p class="cta-sub">
+          No spreadsheets. No guesswork. No accountant needed for the basics.
+          Just your take-home number, done right.
+        </p>
+        <button
+          class="cta-primary large"
+          onclick="showAuthOverlay('registerPanel')"
+        >
+          Create Free Account <span class="cta-arrow">→</span>
+        </button>
+        <p class="cta-note">
+          Already have an account?
+          <button class="inline-link" onclick="showAuthOverlay('loginPanel')">
+            Sign in here
+          </button>
+        </p>
+      </div>
+    </section>
 
-  <!-- =====================
+    <!-- =====================
        DIVIDER
        ===================== -->
-  <div class="section-divider">
-    <div class="divider-inner">
-      <div class="divider-line"></div>
-      <div class="divider-badge" id="calcAnchor">
-        <span>₦</span> Calculator
+    <div class="section-divider">
+      <div class="divider-inner">
+        <div class="divider-line"></div>
+        <div class="divider-badge" id="calcAnchor">
+          <span>₦</span> Calculator
+        </div>
+        <div class="divider-line"></div>
       </div>
-      <div class="divider-line"></div>
     </div>
-  </div>
 
-  <!-- =====================
+    <!-- =====================
+       ROLE CONTEXT BANNER
+       Shown when logged in. Changes copy based on role.
+       Hidden for guests (showLandingMode hides it).
+       ===================== -->
+    <div class="role-context-banner hidden" id="roleContextBanner">
+      <span class="rcb-icon" id="rcbIcon"
+        ><i data-lucide="user-circle"></i
+      ></span>
+      <div class="rcb-text">
+        <span class="rcb-title" id="rcbTitle"></span>
+        <span class="rcb-sub" id="rcbSub"></span>
+      </div>
+    </div>
+
+    <!-- =====================
        SECTION 6: CALCULATOR
        ===================== -->
-  <section id="calculator">
-    <!-- HERO -->
-    <div class="hero">
-      <div class="hero-bg"></div>
-      <div class="hero-inner">
-        <p class="hero-label">Personal Income Tax Calculator</p>
-        <h1 class="hero-title">Know Your<br/><span class="accent">True Take-Home</span></h1>
-        <p class="hero-sub">Calculate your PAYE deductions under the new Nigeria Tax Act 2025 — pension, NHF, NHIS, rent relief and all.</p>
-      </div>
-    </div>
-
-    <!-- MAIN CALCULATOR -->
-    <main class="calculator-wrap" id="calcForm">
-      <div class="calc-container">
-
-        <!-- LEFT: INPUTS -->
-        <div class="calc-inputs">
-
-          <div class="input-group toggle-group">
-            <label class="group-label">Salary Input Period</label>
-            <div class="toggle-switch">
-              <button class="toggle-btn active" id="monthlyBtn" onclick="setInputMode('monthly')">Monthly</button>
-              <button class="toggle-btn" id="annualBtn" onclick="setInputMode('annual')">Annual</button>
-            </div>
-          </div>
-
-          <div class="input-section">
-            <h3 class="section-title">Salary Components <span class="period-label" id="periodLabel">(Monthly)</span></h3>
-            <div class="input-group">
-              <label for="basic">Basic Salary</label>
-              <div class="input-wrap">
-                <span class="currency-sym">₦</span>
-                <input type="number" id="basic" placeholder="0.00" oninput="calculate()" min="0" />
-              </div>
-            </div>
-            <div class="input-group">
-              <label for="housing">Housing Allowance</label>
-              <div class="input-wrap">
-                <span class="currency-sym">₦</span>
-                <input type="number" id="housing" placeholder="0.00" oninput="calculate()" min="0" />
-              </div>
-            </div>
-            <div class="input-group">
-              <label for="transport">Transport Allowance</label>
-              <div class="input-wrap">
-                <span class="currency-sym">₦</span>
-                <input type="number" id="transport" placeholder="0.00" oninput="calculate()" min="0" />
-              </div>
-            </div>
-            <div class="input-group">
-              <label for="other">Other Allowances</label>
-              <div class="input-wrap">
-                <span class="currency-sym">₦</span>
-                <input type="number" id="other" placeholder="0.00" oninput="calculate()" min="0" />
-              </div>
-            </div>
-          </div>
-
-          <div class="input-section">
-            <h3 class="section-title">Rent Relief <span class="tag-new">NTA 2025</span></h3>
-            <div class="info-note">Enter your annual rent to claim relief. Max relief: ₦500,000/year or 20% of rent, whichever is lower.</div>
-            <div class="input-group">
-              <label for="annualRent">Annual Rent Paid</label>
-              <div class="input-wrap">
-                <span class="currency-sym">₦</span>
-                <input type="number" id="annualRent" placeholder="0.00" oninput="calculate()" min="0" />
-              </div>
-            </div>
-          </div>
-
-          <div class="input-section">
-            <h3 class="section-title">Tax Regime Comparison</h3>
-            <div class="regime-toggle">
-              <label class="regime-option">
-                <input type="radio" name="regime" value="both" checked onchange="calculate()" />
-                <span>Show Both</span>
-              </label>
-              <label class="regime-option">
-                <input type="radio" name="regime" value="nta2025" onchange="calculate()" />
-                <span>NTA 2025 Only</span>
-              </label>
-              <label class="regime-option">
-                <input type="radio" name="regime" value="pita" onchange="calculate()" />
-                <span>Old PITA Only</span>
-              </label>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- RIGHT: RESULTS -->
-        <div class="calc-results" id="resultsPanel">
-
-          <div class="empty-state" id="emptyState">
-            <div class="empty-icon">₦</div>
-            <p>Enter your salary components<br/>to see your tax breakdown</p>
-          </div>
-
-          <div class="results-content hidden" id="resultsContent">
-
-            <div class="exemption-banner hidden" id="exemptionBanner">
-              <span class="exemption-icon">✓</span>
-              <div>
-                <strong>You are fully exempt from PAYE tax under NTA 2025</strong>
-                <p>Your annual chargeable income is <strong id="exemptChargeableAmt">₦0</strong> — at or below the ₦800,000 threshold introduced by the Nigeria Tax Act 2025. This means:</p>
-                <ul class="exemption-list">
-                  <li>Your PAYE tax obligation is <strong>₦0.00</strong> — you owe nothing to FIRS.</li>
-                  <li>Your take-home pay is your gross pay minus only your statutory deductions (Pension, NHF, NHIS). No income tax is deducted.</li>
-                  <li>Under the old PITA regime, you may have paid tax. NTA 2025 has removed that burden for low-income earners.</li>
-                  <li>If your salary increases above this threshold in future, PAYE will begin to apply at 15% on the excess.</li>
-                </ul>
-              </div>
-            </div>
-
-            <div class="result-summary">
-              <div class="summary-item">
-                <span class="summary-label">Gross Pay / Month</span>
-                <span class="summary-value" id="grossDisplay">₦0</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Chargeable Income <span class="tip" data-tip="Your gross annual income minus Pension, NHF, NHIS, and Rent Relief. PAYE tax is calculated on this amount — not on your full gross pay.">ⓘ</span></span>
-                <span class="summary-value" id="chargeableDisplay">₦0</span>
-              </div>
-              <div class="summary-item highlight">
-                <span class="summary-label">Monthly Net Pay</span>
-                <span class="summary-value accent" id="summaryNetMonthly">₦0</span>
-              </div>
-              <div class="summary-item highlight">
-                <span class="summary-label">Annual Net Pay</span>
-                <span class="summary-value accent" id="summaryNetAnnual">₦0</span>
-              </div>
-              <div class="summary-item">
-                <span class="summary-label">Effective Tax Rate <span class="tip tip-left" data-tip="The percentage of your total gross income paid as PAYE tax. Different from your marginal rate — it reflects what you actually pay across all bands.">ⓘ</span></span>
-                <span class="summary-value" id="effectiveRateDisplay">0.00%</span>
-              </div>
-            </div>
-
-            <div class="breakdown-section">
-              <h4 class="breakdown-title">Statutory Deductions</h4>
-              <div class="breakdown-table">
-                <div class="breakdown-row">
-                  <span>Pension (8% of Basic+Housing+Transport)</span>
-                  <span id="pensionDisplay">₦0</span>
-                </div>
-                <div class="breakdown-row">
-                  <span>NHF (2.5% of Basic) <span class="tip tip-dark" data-tip="National Housing Fund — a mandatory 2.5% deduction from your basic salary paid to the Federal Mortgage Bank to fund affordable housing schemes.">ⓘ</span></span>
-                  <span id="nhfDisplay">₦0</span>
-                </div>
-                <div class="breakdown-row">
-                  <span>NHIS (5% of Basic) <span class="tip tip-dark" data-tip="National Health Insurance Scheme — 5% of basic salary deducted monthly to fund your government health insurance coverage.">ⓘ</span></span>
-                  <span id="nhisDisplay">₦0</span>
-                </div>
-                <div class="breakdown-row rent-row hidden" id="rentRow">
-                  <span>Rent Relief <span class="tag-new small">NTA 2025</span> <span class="tip tip-dark" data-tip="New under NTA 2025 — replaces the old CRA. Reduces your chargeable income by the lesser of 20% of annual rent paid or ₦500,000. You must enter your annual rent to benefit.">ⓘ</span></span>
-                  <span id="rentReliefDisplay">₦0</span>
-                </div>
-                <div class="breakdown-row total-row">
-                  <span>Total Deductions</span>
-                  <span id="totalDeductionsDisplay">₦0</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="regime-result" id="nta2025Result">
-              <div class="regime-header nta">
-                <span class="regime-badge">NTA 2025</span>
-                <span class="regime-label">New Regime</span>
-              </div>
-              <div class="regime-bands hidden" id="ntaBands"></div>
-              <div class="regime-body">
-                <div class="regime-row"><span>PAYE Tax <span class="tip tip-dark" data-tip="Pay As You Earn — the income tax withheld from your salary each month by your employer and remitted to FIRS on your behalf.">ⓘ</span></span><span class="paye-amount" id="ntaPaye">₦0</span></div>
-                <div class="regime-row net-row"><span>Monthly Net Pay</span><span class="net-amount" id="ntaNetMonthly">₦0</span></div>
-                <div class="regime-row net-row annual"><span>Annual Net Pay</span><span class="net-amount" id="ntaNetAnnual">₦0</span></div>
-              </div>
-            </div>
-
-            <div class="regime-result hidden" id="pitaResult">
-              <div class="regime-header pita">
-                <span class="regime-badge">PITA</span>
-                <span class="regime-label">Old Regime</span>
-              </div>
-              <div class="regime-bands hidden" id="pitaBands"></div>
-              <div class="regime-body">
-                <div class="regime-row"><span>CRA Deduction</span><span id="pitaCra">₦0</span></div>
-                <div class="regime-row"><span>PAYE Tax <span class="tip tip-dark" data-tip="Pay As You Earn under the old PITA regime, using CRA relief and the former tax bands. Shown here for comparison only.">ⓘ</span></span><span class="paye-amount" id="pitaPaye">₦0</span></div>
-                <div class="regime-row net-row"><span>Monthly Net Pay</span><span class="net-amount" id="pitaNetMonthly">₦0</span></div>
-                <div class="regime-row net-row annual"><span>Annual Net Pay</span><span class="net-amount" id="pitaNetAnnual">₦0</span></div>
-              </div>
-            </div>
-
-            <div class="comparison-highlight hidden" id="comparisonHighlight">
-              <div class="comparison-inner">
-                <span class="comparison-label">You save / lose under NTA 2025</span>
-                <span class="comparison-value" id="comparisonValue">₦0</span>
-                <span class="comparison-sub" id="comparisonSub">per month</span>
-              </div>
-            </div>
-
-            <button class="toggle-bands-btn" onclick="toggleBands()">
-              <span id="bandsToggleLabel">▼ Show Tax Band Workings</span>
-            </button>
-
-            <div class="save-section">
-              <div class="save-buttons">
-                <button class="btn-save" onclick="saveCalculation()" id="saveBtn">💾 Save Calculation</button>
-                <button class="btn-pdf" onclick="exportPDF()">📄 Export PDF</button>
-              </div>
-              <p class="save-status hidden" id="saveStatus"></p>
-            </div>
-
-          </div>
+    <section id="calculator">
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-inner">
+          <p class="hero-label">Personal Income Tax Calculator</p>
+          <h1 class="hero-title">
+            Know Your<br /><span class="accent">True Take-Home</span>
+          </h1>
+          <p class="hero-sub">
+            Calculate your PAYE deductions under the new Nigeria Tax Act 2025 —
+            pension, NHF, NHIS, rent relief and all.
+          </p>
         </div>
       </div>
-    </main>
-  </section>
 
-  <!-- =====================
+      <!-- MAIN CALCULATOR -->
+      <main class="calculator-wrap" id="calcForm">
+        <div class="calc-container">
+          <!-- LEFT: INPUTS -->
+          <div class="calc-inputs">
+            <div class="input-group toggle-group">
+              <label class="group-label">Salary Input Period</label>
+              <div class="toggle-switch">
+                <button
+                  class="toggle-btn active"
+                  id="monthlyBtn"
+                  onclick="setInputMode('monthly')"
+                >
+                  Monthly
+                </button>
+                <button
+                  class="toggle-btn"
+                  id="annualBtn"
+                  onclick="setInputMode('annual')"
+                >
+                  Annual
+                </button>
+              </div>
+            </div>
+
+            <div class="input-section">
+              <h3 class="section-title">
+                Salary Components
+                <span class="period-label" id="periodLabel">(Monthly)</span>
+              </h3>
+              <div class="input-group">
+                <label for="basic">Basic Salary</label>
+                <div class="input-wrap">
+                  <span class="currency-sym">₦</span>
+                  <input
+                    type="number"
+                    id="basic"
+                    placeholder="0.00"
+                    oninput="calculate()"
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="housing">Housing Allowance</label>
+                <div class="input-wrap">
+                  <span class="currency-sym">₦</span>
+                  <input
+                    type="number"
+                    id="housing"
+                    placeholder="0.00"
+                    oninput="calculate()"
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="transport">Transport Allowance</label>
+                <div class="input-wrap">
+                  <span class="currency-sym">₦</span>
+                  <input
+                    type="number"
+                    id="transport"
+                    placeholder="0.00"
+                    oninput="calculate()"
+                    min="0"
+                  />
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="other">Other Allowances</label>
+                <div class="input-wrap">
+                  <span class="currency-sym">₦</span>
+                  <input
+                    type="number"
+                    id="other"
+                    placeholder="0.00"
+                    oninput="calculate()"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="input-section">
+              <h3 class="section-title">
+                Rent Relief <span class="tag-new">NTA 2025</span>
+              </h3>
+              <div class="info-note">
+                Enter your annual rent to claim relief. Max relief:
+                ₦500,000/year or 20% of rent, whichever is lower.
+              </div>
+              <div class="input-group">
+                <label for="annualRent">Annual Rent Paid</label>
+                <div class="input-wrap">
+                  <span class="currency-sym">₦</span>
+                  <input
+                    type="number"
+                    id="annualRent"
+                    placeholder="0.00"
+                    oninput="calculate()"
+                    min="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="input-section">
+              <h3 class="section-title">Tax Regime Comparison</h3>
+              <div class="regime-toggle">
+                <label class="regime-option">
+                  <input
+                    type="radio"
+                    name="regime"
+                    value="both"
+                    checked
+                    onchange="calculate()"
+                  />
+                  <span>Show Both</span>
+                </label>
+                <label class="regime-option">
+                  <input
+                    type="radio"
+                    name="regime"
+                    value="nta2025"
+                    onchange="calculate()"
+                  />
+                  <span>NTA 2025 Only</span>
+                </label>
+                <label class="regime-option">
+                  <input
+                    type="radio"
+                    name="regime"
+                    value="pita"
+                    onchange="calculate()"
+                  />
+                  <span>Old PITA Only</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: RESULTS -->
+          <div class="calc-results" id="resultsPanel">
+            <div class="empty-state" id="emptyState">
+              <div class="empty-icon">₦</div>
+              <p>Enter your salary components<br />to see your tax breakdown</p>
+            </div>
+
+            <div class="results-content hidden" id="resultsContent">
+              <div class="exemption-banner hidden" id="exemptionBanner">
+                <span class="exemption-icon">✓</span>
+                <div>
+                  <strong
+                    >You are fully exempt from PAYE tax under NTA 2025</strong
+                  >
+                  <p>
+                    Your annual chargeable income is
+                    <strong id="exemptChargeableAmt">₦0</strong> — at or below
+                    the ₦800,000 threshold introduced by the Nigeria Tax Act
+                    2025. This means:
+                  </p>
+                  <ul class="exemption-list">
+                    <li>
+                      Your PAYE tax obligation is <strong>₦0.00</strong> — you
+                      owe nothing to FIRS.
+                    </li>
+                    <li>
+                      Your take-home pay is your gross pay minus only your
+                      statutory deductions (Pension, NHF, NHIS). No income tax
+                      is deducted.
+                    </li>
+                    <li>
+                      Under the old PITA regime, you may have paid tax. NTA 2025
+                      has removed that burden for low-income earners.
+                    </li>
+                    <li>
+                      If your salary increases above this threshold in future,
+                      PAYE will begin to apply at 15% on the excess.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="result-summary">
+                <div class="summary-item">
+                  <span class="summary-label">Gross Pay / Month</span>
+                  <span class="summary-value" id="grossDisplay">₦0</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label"
+                    >Chargeable Income
+                    <span
+                      class="tip"
+                      data-tip="Your gross annual income minus Pension, NHF, NHIS, and Rent Relief. PAYE tax is calculated on this amount — not on your full gross pay."
+                      >ⓘ</span
+                    ></span
+                  >
+                  <span class="summary-value" id="chargeableDisplay">₦0</span>
+                </div>
+                <div class="summary-item highlight">
+                  <span class="summary-label">Monthly Net Pay</span>
+                  <span class="summary-value accent" id="summaryNetMonthly"
+                    >₦0</span
+                  >
+                </div>
+                <div class="summary-item highlight">
+                  <span class="summary-label">Annual Net Pay</span>
+                  <span class="summary-value accent" id="summaryNetAnnual"
+                    >₦0</span
+                  >
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label"
+                    >Effective Tax Rate
+                    <span
+                      class="tip tip-left"
+                      data-tip="The percentage of your total gross income paid as PAYE tax. Different from your marginal rate — it reflects what you actually pay across all bands."
+                      >ⓘ</span
+                    ></span
+                  >
+                  <span class="summary-value" id="effectiveRateDisplay"
+                    >0.00%</span
+                  >
+                </div>
+              </div>
+
+              <div class="breakdown-section">
+                <h4 class="breakdown-title">Statutory Deductions</h4>
+                <div class="breakdown-table">
+                  <div class="breakdown-row">
+                    <span>Pension (8% of Basic+Housing+Transport)</span>
+                    <span id="pensionDisplay">₦0</span>
+                  </div>
+                  <div class="breakdown-row">
+                    <span
+                      >NHF (2.5% of Basic)
+                      <span
+                        class="tip tip-dark"
+                        data-tip="National Housing Fund — a mandatory 2.5% deduction from your basic salary paid to the Federal Mortgage Bank to fund affordable housing schemes."
+                        >ⓘ</span
+                      ></span
+                    >
+                    <span id="nhfDisplay">₦0</span>
+                  </div>
+                  <div class="breakdown-row">
+                    <span
+                      >NHIS (5% of Basic)
+                      <span
+                        class="tip tip-dark"
+                        data-tip="National Health Insurance Scheme — 5% of basic salary deducted monthly to fund your government health insurance coverage."
+                        >ⓘ</span
+                      ></span
+                    >
+                    <span id="nhisDisplay">₦0</span>
+                  </div>
+                  <div class="breakdown-row rent-row hidden" id="rentRow">
+                    <span
+                      >Rent Relief <span class="tag-new small">NTA 2025</span>
+                      <span
+                        class="tip tip-dark"
+                        data-tip="New under NTA 2025 — replaces the old CRA. Reduces your chargeable income by the lesser of 20% of annual rent paid or ₦500,000. You must enter your annual rent to benefit."
+                        >ⓘ</span
+                      ></span
+                    >
+                    <span id="rentReliefDisplay">₦0</span>
+                  </div>
+                  <div class="breakdown-row total-row">
+                    <span>Total Deductions</span>
+                    <span id="totalDeductionsDisplay">₦0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="regime-result" id="nta2025Result">
+                <div class="regime-header nta">
+                  <span class="regime-badge">NTA 2025</span>
+                  <span class="regime-label">New Regime</span>
+                </div>
+                <div class="regime-bands hidden" id="ntaBands"></div>
+                <div class="regime-body">
+                  <div class="regime-row">
+                    <span
+                      >PAYE Tax
+                      <span
+                        class="tip tip-dark"
+                        data-tip="Pay As You Earn — the income tax withheld from your salary each month by your employer and remitted to FIRS on your behalf."
+                        >ⓘ</span
+                      ></span
+                    ><span class="paye-amount" id="ntaPaye">₦0</span>
+                  </div>
+                  <div class="regime-row net-row">
+                    <span>Monthly Net Pay</span
+                    ><span class="net-amount" id="ntaNetMonthly">₦0</span>
+                  </div>
+                  <div class="regime-row net-row annual">
+                    <span>Annual Net Pay</span
+                    ><span class="net-amount" id="ntaNetAnnual">₦0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="regime-result hidden" id="pitaResult">
+                <div class="regime-header pita">
+                  <span class="regime-badge">PITA</span>
+                  <span class="regime-label">Old Regime</span>
+                </div>
+                <div class="regime-bands hidden" id="pitaBands"></div>
+                <div class="regime-body">
+                  <div class="regime-row">
+                    <span>CRA Deduction</span><span id="pitaCra">₦0</span>
+                  </div>
+                  <div class="regime-row">
+                    <span
+                      >PAYE Tax
+                      <span
+                        class="tip tip-dark"
+                        data-tip="Pay As You Earn under the old PITA regime, using CRA relief and the former tax bands. Shown here for comparison only."
+                        >ⓘ</span
+                      ></span
+                    ><span class="paye-amount" id="pitaPaye">₦0</span>
+                  </div>
+                  <div class="regime-row net-row">
+                    <span>Monthly Net Pay</span
+                    ><span class="net-amount" id="pitaNetMonthly">₦0</span>
+                  </div>
+                  <div class="regime-row net-row annual">
+                    <span>Annual Net Pay</span
+                    ><span class="net-amount" id="pitaNetAnnual">₦0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="comparison-highlight hidden" id="comparisonHighlight">
+                <div class="comp-header">
+                  <span class="comp-title"
+                    >PITA vs NTA 2025 — Regime Comparison</span
+                  >
+                  <span class="comp-sub"
+                    >Side-by-side impact of tax reform on this client</span
+                  >
+                </div>
+                <table class="comp-table">
+                  <thead>
+                    <tr>
+                      <th class="comp-th-label"></th>
+                      <th class="comp-th pita-col">
+                        PITA <span class="comp-regime-tag pita">Old</span>
+                      </th>
+                      <th class="comp-th nta-col">
+                        NTA 2025 <span class="comp-regime-tag nta">New</span>
+                      </th>
+                      <th class="comp-th diff-col">Difference</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="comp-row">
+                      <td class="comp-row-label">Gross Pay / Month</td>
+                      <td class="comp-val" id="cmpGrossPita">—</td>
+                      <td class="comp-val" id="cmpGrossNta">—</td>
+                      <td class="comp-val muted">—</td>
+                    </tr>
+                    <tr class="comp-row">
+                      <td class="comp-row-label">Relief Applied</td>
+                      <td class="comp-val pita-relief" id="cmpReliefPita">—</td>
+                      <td class="comp-val nta-relief" id="cmpReliefNta">—</td>
+                      <td class="comp-val muted" id="cmpReliefDiff">—</td>
+                    </tr>
+                    <tr class="comp-row">
+                      <td class="comp-row-label">Chargeable Income</td>
+                      <td class="comp-val" id="cmpChargePita">—</td>
+                      <td class="comp-val" id="cmpChargeNta">—</td>
+                      <td class="comp-val" id="cmpChargeDiff">—</td>
+                    </tr>
+                    <tr class="comp-row">
+                      <td class="comp-row-label">PAYE / Month</td>
+                      <td class="comp-val red" id="cmpPayePita">—</td>
+                      <td class="comp-val red" id="cmpPayeNta">—</td>
+                      <td class="comp-val" id="cmpPayeDiff">—</td>
+                    </tr>
+                    <tr class="comp-row comp-net-row">
+                      <td class="comp-row-label bold">Net Pay / Month</td>
+                      <td class="comp-val bold green" id="cmpNetPita">—</td>
+                      <td class="comp-val bold green" id="cmpNetNta">—</td>
+                      <td class="comp-val bold" id="cmpNetDiff">—</td>
+                    </tr>
+                    <tr class="comp-row">
+                      <td class="comp-row-label">Net Pay / Year</td>
+                      <td class="comp-val" id="cmpNetAnnualPita">—</td>
+                      <td class="comp-val" id="cmpNetAnnualNta">—</td>
+                      <td class="comp-val" id="cmpNetAnnualDiff">—</td>
+                    </tr>
+                    <tr class="comp-row">
+                      <td class="comp-row-label">Effective Tax Rate</td>
+                      <td class="comp-val amber" id="cmpRatePita">—</td>
+                      <td class="comp-val amber" id="cmpRateNta">—</td>
+                      <td class="comp-val" id="cmpRateDiff">—</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class="comp-verdict" id="compVerdict">
+                  <span class="comp-verdict-value" id="comparisonValue"
+                    >₦0</span
+                  >
+                  <span class="comp-verdict-label" id="comparisonSub"
+                    >per month</span
+                  >
+                </div>
+              </div>
+
+              <button class="toggle-bands-btn" onclick="toggleBands()">
+                <span id="bandsToggleLabel">▼ How Your Tax Was Calculated</span>
+              </button>
+
+              <div class="client-name-field">
+                <label
+                  class="client-name-label"
+                  for="clientName"
+                  id="clientNameLabel"
+                >
+                  Client / Employee Name
+                  <span class="client-name-hint"
+                    >Appears on the PDF report</span
+                  >
+                </label>
+                <input
+                  type="text"
+                  id="clientName"
+                  class="client-name-input"
+                  placeholder="e.g. Okwori Joseph or leave blank for your own name"
+                  maxlength="80"
+                />
+              </div>
+
+              <div class="save-section">
+                <div class="save-buttons">
+                  <button
+                    class="btn-save"
+                    onclick="saveCalculation()"
+                    id="saveBtn"
+                  >
+                    <i data-lucide="save"></i> Save Calculation
+                  </button>
+                  <button class="btn-pdf" onclick="exportPDF()">
+                    <i data-lucide="file-text"></i> Export PDF
+                  </button>
+                </div>
+                <p class="save-status hidden" id="saveStatus"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <!-- =====================
        SECTION 7: HISTORY
        ===================== -->
-  <section class="history-section" id="history" style="display:none">
-    <div class="history-inner">
-      <div class="history-header">
-        <div>
-          <h2 class="history-title">Calculation History</h2>
-          <p class="history-sub">Your private saved tax calculations</p>
+    <!-- ================================================
+       YTD TRACKER — all logged-in roles
+       Year-to-date income & tax projection tool.
+       Located: Tab 2, between Calculator and History.
+       Pure client-side — no DB saves needed.
+       ================================================ -->
+    <section class="ytd-section" id="ytd" style="display: none">
+      <div class="ytd-inner">
+        <div class="ytd-page-header">
+          <h2 class="ytd-title">
+            YTD Tax Tracker <span class="ytd-badge">2025</span>
+          </h2>
+          <p class="ytd-sub">
+            How much have you earned and paid in tax so far this year — and
+            what's left?
+          </p>
         </div>
-        <button class="btn-refresh" onclick="showAppSection('history'); loadHistory();">↻ Refresh</button>
-      </div>
-      <div id="historyList">
-        <div class="history-empty" id="historyEmpty">
-          <p>No saved calculations yet. Calculate your tax above and click <strong>Save Calculation</strong>.</p>
-        </div>
-        <div class="history-grid" id="historyGrid"></div>
-      </div>
-    </div>
-  </section>
 
-  <!-- =====================
+        <div class="ytd-layout">
+          <!-- LEFT: Inputs -->
+          <div class="ytd-inputs-col">
+            <div class="ytd-card">
+              <div class="ytd-card-label">Your Monthly Salary</div>
+
+              <div class="ytd-field">
+                <label>Basic Salary</label>
+                <div class="ytd-num-wrap">
+                  <span class="ytd-prefix">₦</span>
+                  <input
+                    type="number"
+                    id="ytdBasic"
+                    placeholder="0"
+                    min="0"
+                    oninput="calculateYTD()"
+                  />
+                </div>
+              </div>
+              <div class="ytd-field">
+                <label>Housing Allowance</label>
+                <div class="ytd-num-wrap">
+                  <span class="ytd-prefix">₦</span>
+                  <input
+                    type="number"
+                    id="ytdHousing"
+                    placeholder="0"
+                    min="0"
+                    oninput="calculateYTD()"
+                  />
+                </div>
+              </div>
+              <div class="ytd-field">
+                <label>Transport Allowance</label>
+                <div class="ytd-num-wrap">
+                  <span class="ytd-prefix">₦</span>
+                  <input
+                    type="number"
+                    id="ytdTransport"
+                    placeholder="0"
+                    min="0"
+                    oninput="calculateYTD()"
+                  />
+                </div>
+              </div>
+              <div class="ytd-field">
+                <label>Other Allowances</label>
+                <div class="ytd-num-wrap">
+                  <span class="ytd-prefix">₦</span>
+                  <input
+                    type="number"
+                    id="ytdOther"
+                    placeholder="0"
+                    min="0"
+                    oninput="calculateYTD()"
+                  />
+                </div>
+              </div>
+              <div class="ytd-field">
+                <label
+                  >Annual Rent Paid
+                  <span class="ytd-hint-inline">(for rent relief)</span></label
+                >
+                <div class="ytd-num-wrap">
+                  <span class="ytd-prefix">₦</span>
+                  <input
+                    type="number"
+                    id="ytdRent"
+                    placeholder="0"
+                    min="0"
+                    oninput="calculateYTD()"
+                  />
+                </div>
+              </div>
+
+              <div class="ytd-divider"></div>
+              <div class="ytd-card-label">How Far Into the Year?</div>
+
+              <div class="ytd-months-row">
+                <div class="ytd-field ytd-month-field">
+                  <label>Months elapsed</label>
+                  <div class="ytd-month-picker">
+                    <button class="ytd-month-btn" onclick="adjustMonths(-1)">
+                      −
+                    </button>
+                    <span class="ytd-month-val" id="ytdMonthsVal">3</span>
+                    <button class="ytd-month-btn" onclick="adjustMonths(1)">
+                      +
+                    </button>
+                  </div>
+                  <span class="ytd-hint-block" id="ytdMonthHint"
+                    >e.g. end of March</span
+                  >
+                </div>
+                <div class="ytd-month-auto">
+                  <button class="ytd-auto-btn" onclick="autoSetMonths()">
+                    Use today's month
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Results -->
+          <div class="ytd-results-col">
+            <div class="ytd-empty-card" id="ytdEmpty">
+              <div class="ytd-empty-icon"><i data-lucide="calendar"></i></div>
+              <p>
+                Enter your salary components to see your year-to-date tax
+                picture
+              </p>
+            </div>
+
+            <div class="ytd-output hidden" id="ytdOutput">
+              <!-- Year progress bar -->
+              <div class="ytd-progress-card">
+                <div class="ytd-progress-header">
+                  <span class="ytd-progress-label" id="ytdProgressLabel"
+                    >3 of 12 months elapsed</span
+                  >
+                  <span class="ytd-progress-pct" id="ytdProgressPct">25%</span>
+                </div>
+                <div class="ytd-bar-track">
+                  <div
+                    class="ytd-bar-fill"
+                    id="ytdBarFill"
+                    style="width: 25%"
+                  ></div>
+                </div>
+                <div class="ytd-progress-sub" id="ytdProgressSub">
+                  9 months remaining in 2025
+                </div>
+              </div>
+
+              <!-- YTD actuals -->
+              <div class="ytd-block">
+                <div class="ytd-block-title">Year to Date (actual)</div>
+                <div class="ytd-row">
+                  <span>Gross Earned</span
+                  ><span class="ytd-val" id="ytdGrossEarned">—</span>
+                </div>
+                <div class="ytd-row">
+                  <span>Pension Deducted</span
+                  ><span class="ytd-val dim" id="ytdPensionPaid">—</span>
+                </div>
+                <div class="ytd-row">
+                  <span>NHF Deducted</span
+                  ><span class="ytd-val dim" id="ytdNhfPaid">—</span>
+                </div>
+                <div class="ytd-row">
+                  <span>NHIS Deducted</span
+                  ><span class="ytd-val dim" id="ytdNhisPaid">—</span>
+                </div>
+                <div class="ytd-row">
+                  <span>PAYE Tax Paid</span
+                  ><span class="ytd-val red" id="ytdPayePaid">—</span>
+                </div>
+                <div class="ytd-row total">
+                  <span>Net Take-Home (YTD)</span
+                  ><span class="ytd-val green" id="ytdNetEarned">—</span>
+                </div>
+              </div>
+
+              <!-- Full-year projection -->
+              <div class="ytd-block">
+                <div class="ytd-block-title">Full Year Projection</div>
+                <div class="ytd-row">
+                  <span>Projected Gross</span
+                  ><span class="ytd-val" id="ytdProjGross">—</span>
+                </div>
+                <div class="ytd-row">
+                  <span>Projected Annual PAYE</span
+                  ><span class="ytd-val red" id="ytdProjPaye">—</span>
+                </div>
+                <div class="ytd-row">
+                  <span>PAYE Still to Pay</span
+                  ><span class="ytd-val amber" id="ytdProjRemaining">—</span>
+                </div>
+                <div class="ytd-row total">
+                  <span>Projected Annual Net</span
+                  ><span class="ytd-val green" id="ytdProjNet">—</span>
+                </div>
+              </div>
+
+              <!-- Monthly remainder -->
+              <div class="ytd-block accent">
+                <div class="ytd-block-title">
+                  Rest of Year (monthly average)
+                </div>
+                <div class="ytd-row">
+                  <span>Monthly Net Pay</span
+                  ><span class="ytd-val green bold" id="ytdMonthlyNet">—</span>
+                </div>
+                <div class="ytd-row">
+                  <span>Monthly PAYE</span
+                  ><span class="ytd-val red" id="ytdMonthlyPaye">—</span>
+                </div>
+                <div class="ytd-row">
+                  <span>Effective Tax Rate</span
+                  ><span class="ytd-val amber" id="ytdEffRate">—</span>
+                </div>
+              </div>
+
+              <!-- Exempt notice -->
+              <div class="ytd-exempt-banner hidden" id="ytdExemptBanner">
+                <span>✓</span>
+                <div>
+                  <strong>You are PAYE-exempt under NTA 2025</strong>
+                  <p>
+                    Your annual chargeable income is below the ₦800,000
+                    threshold. No PAYE tax applies.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="history-section" id="history" style="display: none">
+      <div class="history-inner">
+        <div class="history-header">
+          <div>
+            <h2 class="history-title">Calculation History</h2>
+            <p class="history-sub">Your private saved tax calculations</p>
+          </div>
+          <div class="history-header-actions">
+            <button
+              class="btn-refresh"
+              onclick="
+                showAppSection('history');
+                loadHistory();
+              "
+            >
+              ↻ Refresh
+            </button>
+            <button
+              class="btn-excel"
+              id="histExcelBtn"
+              onclick="exportHistoryExcel()"
+              style="display: none"
+            >
+              <i data-lucide="file-spreadsheet"></i> Export Excel
+            </button>
+          </div>
+        </div>
+        <!-- US-018: Client name filter -->
+        <div class="history-search-wrap">
+          <input
+            class="history-search-input"
+            id="historySearch"
+            type="text"
+            placeholder="Search by client name…"
+            oninput="filterHistory()"
+          />
+          <span class="history-search-count" id="historySearchCount"></span>
+        </div>
+        <div id="historyList">
+          <div class="history-empty" id="historyEmpty">
+            <p>
+              No saved calculations yet. Calculate your tax above and click
+              <strong>Save Calculation</strong>.
+            </p>
+          </div>
+          <div class="history-empty hidden" id="historyNoResults">
+            <p>
+              No calculations found for
+              <strong id="historySearchTerm"></strong>. Try a different name.
+            </p>
+          </div>
+          <div class="history-grid" id="historyGrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+       SECTION: CLIENT PROFILES (US-017)
+       ===================== -->
+    <section class="history-section" id="clients" style="display: none">
+      <div class="history-inner">
+        <div class="history-header">
+          <div>
+            <h2 class="history-title">Client Profiles</h2>
+            <p class="history-sub">
+              Save client salary details for quick monthly recalculation
+            </p>
+          </div>
+          <button class="btn-refresh" onclick="showClientForm(null)">
+            + New Client
+          </button>
+        </div>
+
+        <!-- Save / Edit Form -->
+        <div id="clientFormWrap" class="client-form-wrap hidden">
+          <div class="client-form-card">
+            <div class="client-form-header">
+              <span id="clientFormTitle">New Client Profile</span>
+              <button class="client-form-close" onclick="hideClientForm()">
+                ✕
+              </button>
+            </div>
+            <div class="client-form-body">
+              <input type="hidden" id="editingProfileId" value="" />
+              <div class="cf-row">
+                <label class="cf-label"
+                  >Client Name <span class="cf-required">*</span></label
+                >
+                <input
+                  class="cf-input"
+                  id="cpName"
+                  placeholder="e.g. Amaka Okafor"
+                />
+              </div>
+              <div class="cf-row cf-two">
+                <div>
+                  <label class="cf-label">Basic Salary (Monthly)</label>
+                  <input
+                    class="cf-input"
+                    id="cpBasic"
+                    type="number"
+                    placeholder="e.g. 200000"
+                    oninput="previewClientCalc()"
+                  />
+                </div>
+                <div>
+                  <label class="cf-label">Housing Allowance (Monthly)</label>
+                  <input
+                    class="cf-input"
+                    id="cpHousing"
+                    type="number"
+                    placeholder="e.g. 50000"
+                    oninput="previewClientCalc()"
+                  />
+                </div>
+              </div>
+              <div class="cf-row cf-two">
+                <div>
+                  <label class="cf-label">Transport Allowance (Monthly)</label>
+                  <input
+                    class="cf-input"
+                    id="cpTransport"
+                    type="number"
+                    placeholder="e.g. 30000"
+                    oninput="previewClientCalc()"
+                  />
+                </div>
+                <div>
+                  <label class="cf-label">Other Allowances (Monthly)</label>
+                  <input
+                    class="cf-input"
+                    id="cpOther"
+                    type="number"
+                    placeholder="e.g. 0"
+                    oninput="previewClientCalc()"
+                  />
+                </div>
+              </div>
+              <div class="cf-row cf-two">
+                <div>
+                  <label class="cf-label"
+                    >Annual Rent (₦/year)
+                    <span class="cf-hint">for rent relief</span></label
+                  >
+                  <input
+                    class="cf-input"
+                    id="cpRent"
+                    type="number"
+                    placeholder="e.g. 300000"
+                    oninput="previewClientCalc()"
+                  />
+                </div>
+                <div>
+                  <label class="cf-label"
+                    >Notes <span class="cf-hint">optional</span></label
+                  >
+                  <input
+                    class="cf-input"
+                    id="cpNotes"
+                    placeholder="e.g. Lagos branch manager"
+                  />
+                </div>
+              </div>
+              <!-- Live preview -->
+              <div id="cpPreview" class="cp-preview hidden">
+                <div class="cp-preview-row">
+                  <span>Monthly Net (NTA 2025)</span
+                  ><span id="cpPreviewNet" class="cp-preview-val green"></span>
+                </div>
+                <div class="cp-preview-row">
+                  <span>PAYE / Month</span
+                  ><span id="cpPreviewPaye" class="cp-preview-val red"></span>
+                </div>
+                <div class="cp-preview-row">
+                  <span>Effective Tax Rate</span
+                  ><span id="cpPreviewRate" class="cp-preview-val"></span>
+                </div>
+              </div>
+              <div id="cpSaveStatus" class="save-status hidden"></div>
+              <div class="cf-actions">
+                <button class="btn-secondary" onclick="hideClientForm()">
+                  Cancel
+                </button>
+                <button class="btn-primary" onclick="saveClientProfile()">
+                  <i data-lucide="save"></i> Save Profile
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profiles List -->
+        <div id="clientProfilesEmpty" class="history-empty hidden">
+          <p>
+            No client profiles yet. Click <strong>+ New Client</strong> to save
+            your first client.
+          </p>
+        </div>
+        <div id="clientProfilesGrid" class="client-profiles-grid"></div>
+      </div>
+    </section>
+
+    <!-- =====================
        SECTION 8: PAYROLL
        ===================== -->
-  <section class="payroll-section" id="payroll" style="display:none">
-    <div class="payroll-inner">
+    <section class="payroll-section" id="payroll" style="display: none">
+      <div class="payroll-inner">
+        <!-- Header -->
+        <div class="payroll-header">
+          <div>
+            <h2 class="payroll-title">Payroll Manager</h2>
+            <p class="payroll-sub">
+              Calculate PAYE for multiple employees under NTA 2025
+            </p>
+            <p class="payroll-personal-nudge">
+              Need to check your own take-home?
+              <button class="nudge-link" onclick="showAppSection('calculator')">
+                Use the Calculator tab →
+              </button>
+            </p>
+            <div class="payroll-explainer">
+              <details class="payroll-what-is">
+                <summary>What is Payroll Manager? ▾</summary>
+                <div class="payroll-explainer-body">
+                  <p>
+                    The <strong>Payroll Manager</strong> is for employers, HR
+                    teams, and payroll bureaus who need to process PAYE tax for
+                    multiple employees at once — rather than calculating one
+                    person at a time.
+                  </p>
+                  <p>Here's how to use it:</p>
+                  <ol>
+                    <li>
+                      <strong>Give the run a name</strong> — e.g. "March 2025
+                      Payroll" — and a pay period.
+                    </li>
+                    <li>
+                      <strong>Add each employee</strong> with their salary
+                      components (basic, housing, transport, etc). Each
+                      employee's full NTA 2025 deductions and PAYE are
+                      calculated instantly.
+                    </li>
+                    <li>
+                      <strong>Review the table</strong> — see every employee's
+                      pension, NHF, NHIS, PAYE, and net take-home side by side.
+                    </li>
+                    <li>
+                      <strong>Check the summary bar</strong> — shows total gross
+                      payroll, the exact amount to remit to FIRS as PAYE, and
+                      total net to pay staff.
+                    </li>
+                    <li>
+                      <strong>Export or save</strong> — download as Excel for
+                      your records, print a PDF payroll computation sheet, or
+                      save the run to your private history.
+                    </li>
+                  </ol>
+                  <p class="explainer-note">
+                    All calculations follow the
+                    <strong>Nigeria Tax Act 2025</strong>. For compliance,
+                    consult a certified tax professional.
+                  </p>
+                </div>
+              </details>
+            </div>
+          </div>
+          <div class="payroll-header-actions">
+            <button
+              class="btn-payroll-save"
+              id="savePayrollBtn"
+              onclick="savePayrollRun()"
+            >
+              <i data-lucide="save"></i> Save Run
+            </button>
+            <button class="btn-payroll-xlsx" onclick="exportPayrollXLSX()">
+              <i data-lucide="file-spreadsheet"></i> Export Excel
+            </button>
+          </div>
+        </div>
 
-      <!-- Header -->
-      <div class="payroll-header">
-        <div>
-          <h2 class="payroll-title">Payroll Manager</h2>
-          <p class="payroll-sub">Calculate PAYE for multiple employees under NTA 2025</p>
-          <p class="payroll-personal-nudge">Need to check your own take-home? <button class="nudge-link" onclick="showAppSection('calculator')">Use the Calculator tab →</button></p>
-          <div class="payroll-explainer">
-            <details class="payroll-what-is">
-              <summary>What is Payroll Manager? ▾</summary>
-              <div class="payroll-explainer-body">
-                <p>The <strong>Payroll Manager</strong> is for employers, HR teams, and payroll bureaus who need to process PAYE tax for multiple employees at once — rather than calculating one person at a time.</p>
-                <p>Here's how to use it:</p>
-                <ol>
-                  <li><strong>Give the run a name</strong> — e.g. "March 2025 Payroll" — and a pay period.</li>
-                  <li><strong>Add each employee</strong> with their salary components (basic, housing, transport, etc). Each employee's full NTA 2025 deductions and PAYE are calculated instantly.</li>
-                  <li><strong>Review the table</strong> — see every employee's pension, NHF, NHIS, PAYE, and net take-home side by side.</li>
-                  <li><strong>Check the summary bar</strong> — shows total gross payroll, the exact amount to remit to FIRS as PAYE, and total net to pay staff.</li>
-                  <li><strong>Export or save</strong> — download as Excel for your records, print a PDF payroll computation sheet, or save the run to your private history.</li>
-                </ol>
-                <p class="explainer-note">All calculations follow the <strong>Nigeria Tax Act 2025</strong>. For compliance, consult a certified tax professional.</p>
+        <!-- Run Meta -->
+        <div class="payroll-meta">
+          <div class="payroll-meta-field">
+            <label>Payroll Run Name</label>
+            <input
+              type="text"
+              id="payrollRunName"
+              placeholder="e.g. March 2025 Payroll"
+            />
+          </div>
+          <div class="payroll-meta-field">
+            <label>Pay Period</label>
+            <input
+              type="text"
+              id="payrollPeriod"
+              placeholder="e.g. March 2025"
+            />
+          </div>
+        </div>
+
+        <!-- Add Employee Form -->
+        <div class="payroll-add-employee">
+          <h3 class="payroll-section-title">Add Employee</h3>
+          <div class="payroll-form-grid">
+            <div class="payroll-field">
+              <label>Full Name</label>
+              <input type="text" id="empName" placeholder="e.g. Amaka Okafor" />
+            </div>
+            <div class="payroll-field">
+              <label>Basic Salary / Month (₦)</label>
+              <input type="number" id="empBasic" placeholder="0" min="0" />
+            </div>
+            <div class="payroll-field">
+              <label>Housing Allowance / Month (₦)</label>
+              <input type="number" id="empHousing" placeholder="0" min="0" />
+            </div>
+            <div class="payroll-field">
+              <label>Transport / Month (₦)</label>
+              <input type="number" id="empTransport" placeholder="0" min="0" />
+            </div>
+            <div class="payroll-field">
+              <label>Other Allowances / Month (₦)</label>
+              <input type="number" id="empOther" placeholder="0" min="0" />
+            </div>
+            <div class="payroll-field">
+              <label>Annual Rent Paid (₦)</label>
+              <input type="number" id="empRent" placeholder="0" min="0" />
+            </div>
+          </div>
+          <button class="btn-add-employee" onclick="addPayrollEmployee()">
+            + Add Employee
+          </button>
+          <p class="payroll-add-error hidden" id="payrollAddError"></p>
+        </div>
+
+        <!-- Employee Table -->
+        <div class="payroll-table-wrap" id="payrollTableWrap">
+          <div class="payroll-empty" id="payrollEmpty">
+            <p>
+              No employees added yet. Use the form above to add your first
+              employee.
+            </p>
+          </div>
+          <div id="payrollTableContainer" class="hidden">
+            <table class="payroll-table" id="payrollTable">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th>Gross / Month</th>
+                  <th>Pension (Emp)</th>
+                  <th>
+                    NHF
+                    <span
+                      class="tip tip-below"
+                      data-tip="National Housing Fund — 2.5% of basic salary."
+                      >ⓘ</span
+                    >
+                  </th>
+                  <th>
+                    NHIS
+                    <span
+                      class="tip tip-below"
+                      data-tip="National Health Insurance Scheme — 5% of basic salary."
+                      >ⓘ</span
+                    >
+                  </th>
+                  <th>Rent Relief</th>
+                  <th>
+                    PAYE / Month
+                    <span
+                      class="tip tip-below tip-left"
+                      data-tip="Monthly Pay As You Earn tax under NTA 2025. Employer must remit the total to FIRS by the 10th of the following month."
+                      >ⓘ</span
+                    >
+                  </th>
+                  <th>Net / Month</th>
+                  <th>
+                    Emp Pension (10%)
+                    <span
+                      class="tip tip-below tip-left"
+                      data-tip="Employer's pension contribution — 10% of pensionable emoluments (Basic + Housing + Transport). This is an additional cost to the employer, separate from the employee's own 8%."
+                      >ⓘ</span
+                    >
+                  </th>
+                  <th>Total Cost</th>
+                  <th>Eff. Rate</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="payrollTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Summary Bar -->
+        <div
+          class="payroll-summary hidden"
+          id="payrollSummary"
+          style="grid-template-columns: repeat(6, 1fr)"
+        >
+          <div class="payroll-summary-item">
+            <span class="payroll-summary-label">Employees</span>
+            <span class="payroll-summary-value" id="summEmployeeCount">0</span>
+          </div>
+          <div class="payroll-summary-item">
+            <span class="payroll-summary-label">Total Gross / Month</span>
+            <span class="payroll-summary-value" id="summTotalGross">₦0</span>
+          </div>
+          <div class="payroll-summary-item highlight">
+            <span class="payroll-summary-label"
+              >PAYE to Remit to FIRS
+              <span
+                class="tip"
+                data-tip="Total PAYE tax across all employees for this payroll run. This exact amount must be remitted to FIRS (Federal Inland Revenue Service) by the 10th of the following month."
+                >ⓘ</span
+              ></span
+            >
+            <span class="payroll-summary-value red" id="summTotalPAYE">₦0</span>
+            <span class="payroll-summary-sub"
+              >Due by 10th of following month</span
+            >
+          </div>
+          <div class="payroll-summary-item">
+            <span class="payroll-summary-label"
+              >Employer Pension (10%)
+              <span
+                class="tip tip-left"
+                data-tip="10% of each employee's pensionable emoluments (Basic + Housing + Transport). This is the employer's statutory contribution — separate from the employee's 8% deduction."
+                >ⓘ</span
+              ></span
+            >
+            <span class="payroll-summary-value amber" id="summEmployerPension"
+              >₦0</span
+            >
+          </div>
+          <div class="payroll-summary-item highlight">
+            <span class="payroll-summary-label"
+              >Total Employer Cost
+              <span
+                class="tip tip-left"
+                data-tip="Total monthly outlay to the employer: sum of all gross salaries plus the employer's 10% pension contributions. Use this for budget planning."
+                >ⓘ</span
+              ></span
+            >
+            <span class="payroll-summary-value" id="summTotalCost">₦0</span>
+            <span class="payroll-summary-sub">Gross + Employer Pension</span>
+          </div>
+          <div class="payroll-summary-item">
+            <span class="payroll-summary-label">Total Net to Staff</span>
+            <span class="payroll-summary-value green" id="summTotalNet"
+              >₦0</span
+            >
+          </div>
+        </div>
+
+        <!-- Saved Payroll Runs -->
+        <div class="payroll-saved-section">
+          <div class="payroll-saved-header">
+            <h3 class="payroll-section-title">Saved Payroll Runs</h3>
+            <button class="btn-refresh" onclick="loadPayrollRuns()">
+              ↻ Refresh
+            </button>
+          </div>
+          <div id="payrollRunsEmpty" class="payroll-runs-empty">
+            <p>No saved payroll runs yet.</p>
+          </div>
+          <div id="payrollRunsGrid" class="payroll-runs-grid"></div>
+        </div>
+
+        <!-- REMITTANCE GUIDE — collapsible, lives inside Payroll -->
+        <div class="remit-guide">
+          <button class="remit-toggle" onclick="toggleRemitGuide(this)">
+            <span
+              ><i data-lucide="map-pin"></i> Where to Remit PAYE — All 36 States
+              + FCT</span
+            >
+            <span class="remit-chevron">▼</span>
+          </button>
+          <div class="remit-body hidden" id="remitBody">
+            <p class="remit-intro">
+              PAYE is remitted to the IRS of the state where your employee
+              <strong>works</strong>, not where your company is registered.
+              Deadline is the
+              <strong>10th of the following month</strong> nationwide.
+            </p>
+            <div class="remit-deadlines">
+              <div class="remit-dl-item">
+                <span><i data-lucide="calendar"></i></span>
+                <div>
+                  <strong>PAYE</strong
+                  ><span>10th of following month → State IRS</span>
+                </div>
               </div>
-            </details>
+              <div class="remit-dl-item">
+                <span><i data-lucide="home"></i></span>
+                <div>
+                  <strong>NHF</strong><span>Monthly alongside PAYE → FMBN</span>
+                </div>
+              </div>
+              <div class="remit-dl-item">
+                <span><i data-lucide="banknote"></i></span>
+                <div>
+                  <strong>Pension</strong
+                  ><span>Within 7 days of salary payment → PFA</span>
+                </div>
+              </div>
+              <div class="remit-dl-item">
+                <span><i data-lucide="clipboard-list"></i></span>
+                <div>
+                  <strong>Annual Returns (Form A)</strong
+                  ><span>31 January → State IRS</span>
+                </div>
+              </div>
+            </div>
+            <input
+              type="text"
+              id="remitSearch"
+              class="remit-search"
+              placeholder="Search state or authority…"
+              oninput="filterRemitStates()"
+            />
+            <div class="remit-state-grid" id="remitStateGrid"></div>
           </div>
-        </div>
-        <div class="payroll-header-actions">
-          <button class="btn-payroll-save" id="savePayrollBtn" onclick="savePayrollRun()">💾 Save Run</button>
-          <button class="btn-payroll-xlsx" onclick="exportPayrollXLSX()">📊 Export Excel</button>
         </div>
       </div>
+    </section>
 
-      <!-- Run Meta -->
-      <div class="payroll-meta">
-        <div class="payroll-meta-field">
-          <label>Payroll Run Name</label>
-          <input type="text" id="payrollRunName" placeholder="e.g. March 2025 Payroll" />
-        </div>
-        <div class="payroll-meta-field">
-          <label>Pay Period</label>
-          <input type="text" id="payrollPeriod" placeholder="e.g. March 2025" />
-        </div>
-      </div>
-
-      <!-- Add Employee Form -->
-      <div class="payroll-add-employee">
-        <h3 class="payroll-section-title">Add Employee</h3>
-        <div class="payroll-form-grid">
-          <div class="payroll-field">
-            <label>Full Name</label>
-            <input type="text" id="empName" placeholder="e.g. Amaka Okafor" />
-          </div>
-          <div class="payroll-field">
-            <label>Basic Salary / Month (₦)</label>
-            <input type="number" id="empBasic" placeholder="0" min="0" />
-          </div>
-          <div class="payroll-field">
-            <label>Housing Allowance / Month (₦)</label>
-            <input type="number" id="empHousing" placeholder="0" min="0" />
-          </div>
-          <div class="payroll-field">
-            <label>Transport / Month (₦)</label>
-            <input type="number" id="empTransport" placeholder="0" min="0" />
-          </div>
-          <div class="payroll-field">
-            <label>Other Allowances / Month (₦)</label>
-            <input type="number" id="empOther" placeholder="0" min="0" />
-          </div>
-          <div class="payroll-field">
-            <label>Annual Rent Paid (₦)</label>
-            <input type="number" id="empRent" placeholder="0" min="0" />
-          </div>
-        </div>
-        <button class="btn-add-employee" onclick="addPayrollEmployee()">+ Add Employee</button>
-        <p class="payroll-add-error hidden" id="payrollAddError"></p>
-      </div>
-
-      <!-- Employee Table -->
-      <div class="payroll-table-wrap" id="payrollTableWrap">
-        <div class="payroll-empty" id="payrollEmpty">
-          <p>No employees added yet. Use the form above to add your first employee.</p>
-        </div>
-        <div id="payrollTableContainer" class="hidden">
-          <table class="payroll-table" id="payrollTable">
-            <thead>
-              <tr>
-                <th>Employee</th>
-                <th>Gross / Month</th>
-                <th>Pension (Emp)</th>
-                <th>NHF <span class="tip tip-below" data-tip="National Housing Fund — 2.5% of basic salary.">ⓘ</span></th>
-                <th>NHIS <span class="tip tip-below" data-tip="National Health Insurance Scheme — 5% of basic salary.">ⓘ</span></th>
-                <th>Rent Relief</th>
-                <th>PAYE / Month <span class="tip tip-below tip-left" data-tip="Monthly Pay As You Earn tax under NTA 2025. Employer must remit the total to FIRS by the 10th of the following month.">ⓘ</span></th>
-                <th>Net / Month</th>
-                <th>Emp Pension (10%) <span class="tip tip-below tip-left" data-tip="Employer's pension contribution — 10% of pensionable emoluments (Basic + Housing + Transport). This is an additional cost to the employer, separate from the employee's own 8%.">ⓘ</span></th>
-                <th>Total Cost</th>
-                <th>Eff. Rate</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="payrollTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Summary Bar -->
-      <div class="payroll-summary hidden" id="payrollSummary" style="grid-template-columns:repeat(6,1fr)">
-        <div class="payroll-summary-item">
-          <span class="payroll-summary-label">Employees</span>
-          <span class="payroll-summary-value" id="summEmployeeCount">0</span>
-        </div>
-        <div class="payroll-summary-item">
-          <span class="payroll-summary-label">Total Gross / Month</span>
-          <span class="payroll-summary-value" id="summTotalGross">₦0</span>
-        </div>
-        <div class="payroll-summary-item highlight">
-          <span class="payroll-summary-label">PAYE to Remit to FIRS <span class="tip" data-tip="Total PAYE tax across all employees for this payroll run. This exact amount must be remitted to FIRS (Federal Inland Revenue Service) by the 10th of the following month.">ⓘ</span></span>
-          <span class="payroll-summary-value red" id="summTotalPAYE">₦0</span>
-          <span class="payroll-summary-sub">Due by 10th of following month</span>
-        </div>
-        <div class="payroll-summary-item">
-          <span class="payroll-summary-label">Employer Pension (10%) <span class="tip tip-left" data-tip="10% of each employee's pensionable emoluments (Basic + Housing + Transport). This is the employer's statutory contribution — separate from the employee's 8% deduction.">ⓘ</span></span>
-          <span class="payroll-summary-value amber" id="summEmployerPension">₦0</span>
-        </div>
-        <div class="payroll-summary-item highlight">
-          <span class="payroll-summary-label">Total Employer Cost <span class="tip tip-left" data-tip="Total monthly outlay to the employer: sum of all gross salaries plus the employer's 10% pension contributions. Use this for budget planning.">ⓘ</span></span>
-          <span class="payroll-summary-value" id="summTotalCost">₦0</span>
-          <span class="payroll-summary-sub">Gross + Employer Pension</span>
-        </div>
-        <div class="payroll-summary-item">
-          <span class="payroll-summary-label">Total Net to Staff</span>
-          <span class="payroll-summary-value green" id="summTotalNet">₦0</span>
-        </div>
-      </div>
-
-      <!-- Saved Payroll Runs -->
-      <div class="payroll-saved-section">
-        <div class="payroll-saved-header">
-          <h3 class="payroll-section-title">Saved Payroll Runs</h3>
-          <button class="btn-refresh" onclick="loadPayrollRuns()">↻ Refresh</button>
-        </div>
-        <div id="payrollRunsEmpty" class="payroll-runs-empty">
-          <p>No saved payroll runs yet.</p>
-        </div>
-        <div id="payrollRunsGrid" class="payroll-runs-grid"></div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ================================================
-       CIT / BUSINESS TAX SECTION
-       Visible: business_owner, tax_consultant only
+    <!-- ================================================
+       BUSINESS TAX / CIT — business_owner + tax_consultant only
+       CIT = Company Income Tax. What Nigerian companies pay
+       on profit. Separate from PAYE (which employees pay).
        ================================================ -->
-  <section class="cit-section" id="cit" style="display:none">
-    <div class="cit-inner">
-      <div class="cit-header">
-        <h2 class="cit-title">Business Tax <span class="cit-badge">NTA 2025</span></h2>
-        <p class="cit-sub">Company Income Tax & Development Levy calculator for Nigeria</p>
-      </div>
+    <section class="cit-section" id="cit" style="display: none">
+      <div class="cit-inner">
+        <div class="cit-page-header">
+          <h2 class="cit-title">
+            Company Income Tax <span class="cit-nta-badge">NTA 2025</span>
+          </h2>
+          <p class="cit-sub">
+            CIT &amp; Development Levy calculator for Nigerian companies
+          </p>
+        </div>
 
-      <div class="cit-layout">
-        <!-- LEFT: Inputs -->
-        <div class="cit-inputs-panel">
-          <div class="cit-card">
-            <div class="cit-section-label">Company Details</div>
+        <div class="cit-layout">
+          <!-- Inputs -->
+          <div class="cit-inputs-col">
+            <div class="cit-input-card">
+              <div class="cit-card-label">Company Financials</div>
 
-            <div class="cit-field">
-              <label for="citTurnover">Annual Turnover (₦)</label>
-              <div class="cit-input-wrap"><span class="cit-sym">₦</span><input type="number" id="citTurnover" placeholder="0" min="0" oninput="calculateCIT()" /></div>
-              <span class="cit-hint">Total revenue before any deductions</span>
+              <div class="cit-field">
+                <label
+                  >Company Name
+                  <span style="opacity: 0.4; font-size: 11px"
+                    >(for reports)</span
+                  ></label
+                >
+                <input
+                  type="text"
+                  id="citCompanyName"
+                  class="cit-year-input"
+                  style="width: 100%; padding: 8px 10px"
+                  placeholder="e.g. Okwori Ventures Ltd"
+                  oninput="calculateCIT()"
+                />
+              </div>
+
+              <div class="cit-field">
+                <label>Period / Quarter</label>
+                <select
+                  id="citQuarter"
+                  class="cit-year-input"
+                  style="width: 100%; padding: 8px 10px"
+                  oninput="calculateCIT()"
+                >
+                  <option value="Q1 2026">Q1 2026 (Jan–Mar)</option>
+                  <option value="Q2 2026">Q2 2026 (Apr–Jun)</option>
+                  <option value="Q3 2026">Q3 2026 (Jul–Sep)</option>
+                  <option value="Q4 2026">Q4 2026 (Oct–Dec)</option>
+                  <option value="FY 2025">Full Year 2025</option>
+                  <option value="FY 2026" selected>Full Year 2026</option>
+                </select>
+              </div>
+
+              <div class="cit-field">
+                <label>Annual Turnover (₦)</label>
+                <div class="cit-num-wrap">
+                  <span class="cit-prefix">₦</span>
+                  <input
+                    type="number"
+                    id="citTurnover"
+                    placeholder="0"
+                    min="0"
+                    oninput="calculateCIT()"
+                  />
+                </div>
+                <span class="cit-hint"
+                  >Total revenue before any deductions</span
+                >
+              </div>
+
+              <div class="cit-field">
+                <label>Assessable Profit (₦)</label>
+                <div class="cit-num-wrap">
+                  <span class="cit-prefix">₦</span>
+                  <input
+                    type="number"
+                    id="citProfit"
+                    placeholder="0"
+                    min="0"
+                    oninput="calculateCIT()"
+                  />
+                </div>
+                <span class="cit-hint"
+                  >Profit after FIRS-allowable deductions</span
+                >
+              </div>
+
+              <div class="cit-field">
+                <label>Total Assets (₦)</label>
+                <div class="cit-num-wrap">
+                  <span class="cit-prefix">₦</span>
+                  <input
+                    type="number"
+                    id="citAssets"
+                    placeholder="0"
+                    min="0"
+                    oninput="calculateCIT()"
+                  />
+                </div>
+                <span class="cit-hint"
+                  >Needed to confirm small company status (≤ ₦250m)</span
+                >
+              </div>
+
+              <div class="cit-field">
+                <label>Financial Year</label>
+                <input
+                  type="number"
+                  id="citYear"
+                  class="cit-year-input"
+                  value="2025"
+                  min="2020"
+                  max="2030"
+                  oninput="calculateCIT()"
+                />
+              </div>
+
+              <div class="cit-tier-guide">
+                <div class="cit-tg-row small">
+                  <span class="cit-tg-badge">Small</span
+                  ><span
+                    >Turnover &lt; ₦50m <em>and</em> Assets ≤ ₦250m →
+                    <strong>0% CIT</strong></span
+                  >
+                </div>
+                <div class="cit-tg-row medium">
+                  <span class="cit-tg-badge">Medium</span
+                  ><span
+                    >Turnover ₦50m–₦500m →
+                    <strong>20% CIT + 4% levy</strong></span
+                  >
+                </div>
+                <div class="cit-tg-row large">
+                  <span class="cit-tg-badge">Large</span
+                  ><span
+                    >Turnover &gt; ₦500m →
+                    <strong>30% CIT + 4% levy</strong></span
+                  >
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div class="cit-field">
-              <label for="citProfit">Assessable Profit (₦)</label>
-              <div class="cit-input-wrap"><span class="cit-sym">₦</span><input type="number" id="citProfit" placeholder="0" min="0" oninput="calculateCIT()" /></div>
-              <span class="cit-hint">Profit after allowable deductions per FIRS rules</span>
-            </div>
-
-            <div class="cit-field">
-              <label for="citAssets">Total Assets (₦)</label>
-              <div class="cit-input-wrap"><span class="cit-sym">₦</span><input type="number" id="citAssets" placeholder="0" min="0" oninput="calculateCIT()" /></div>
-              <span class="cit-hint">Used to determine small company status (≤ ₦250m)</span>
-            </div>
-
-            <div class="cit-field">
-              <label for="citYear">Financial Year</label>
-              <input type="number" id="citYear" class="cit-year-input" value="2025" min="2020" max="2030" oninput="calculateCIT()" />
-            </div>
-
-            <div class="cit-tier-explain">
-              <div class="cit-tier-row"><span class="tier-badge small">Small</span><span>Turnover &lt; ₦50m <em>and</em> Assets ≤ ₦250m → <strong>0% CIT</strong></span></div>
-              <div class="cit-tier-row"><span class="tier-badge medium">Medium</span><span>Turnover ₦50m–₦500m → <strong>20% CIT</strong></span></div>
-              <div class="cit-tier-row"><span class="tier-badge large">Large</span><span>Turnover &gt; ₦500m → <strong>30% CIT</strong></span></div>
+          <!-- Results -->
+          <div class="cit-results-col">
+            <div class="cit-results-card">
+              <div class="cit-empty-state" id="citEmpty">
+                <div class="cit-empty-icon"><i data-lucide="landmark"></i></div>
+                <p>
+                  Enter your company figures on the left to see your CIT
+                  liability
+                </p>
+              </div>
+              <div class="cit-output hidden" id="citOutput">
+                <div id="citTierBlock"></div>
+                <div class="cit-result-group">
+                  <div
+                    class="cit-rrow"
+                    id="citRCompanyRow"
+                    style="display: none"
+                  >
+                    <span>Company</span
+                    ><span class="crv" id="citRCompany">—</span>
+                  </div>
+                  <div class="cit-rrow" id="citRPeriodRow">
+                    <span>Period</span
+                    ><span class="crv" id="citRPeriod">—</span>
+                  </div>
+                  <div class="cit-rrow">
+                    <span>Annual Turnover</span
+                    ><span class="crv" id="citRTurnover">—</span>
+                  </div>
+                  <div class="cit-rrow">
+                    <span>Assessable Profit</span
+                    ><span class="crv" id="citRProfit">—</span>
+                  </div>
+                </div>
+                <div class="cit-result-group primary">
+                  <div class="cit-rrow">
+                    <span>CIT Rate</span
+                    ><span class="crv amber" id="citRRate">—</span>
+                  </div>
+                  <div class="cit-rrow">
+                    <span>CIT Payable</span
+                    ><span class="crv red" id="citRCIT">—</span>
+                  </div>
+                  <div class="cit-rrow">
+                    <span>Development Levy (4%)</span
+                    ><span class="crv red" id="citRLevy">—</span>
+                  </div>
+                  <div id="citLevyNote" class="cit-levy-note hidden">
+                    ℹ️ This single 4% levy
+                    <strong>replaces 4 previous levies</strong> under NTA 2025:
+                    NITDA (1%), NASENI (0.5%), Education Tax (2%), and Police
+                    Trust Fund (0.5%).
+                  </div>
+                  <div class="cit-rrow total">
+                    <span>Total Tax Payable</span
+                    ><span class="crv red bold" id="citRTotal">—</span>
+                  </div>
+                </div>
+                <div class="cit-result-group">
+                  <div class="cit-rrow">
+                    <span>Net Profit After Tax</span
+                    ><span class="crv green" id="citRNet">—</span>
+                  </div>
+                  <div class="cit-rrow">
+                    <span>Effective Tax Rate</span
+                    ><span class="crv amber" id="citREffective">—</span>
+                  </div>
+                </div>
+                <div class="cit-btn-row">
+                  <button class="cit-action-btn save" onclick="saveCIT()">
+                    <i data-lucide="save"></i> Save
+                  </button>
+                  <button class="cit-action-btn pdf" onclick="exportCITPDF()">
+                    <i data-lucide="file-text"></i> PDF
+                  </button>
+                  <button
+                    class="cit-action-btn excel"
+                    onclick="exportCITExcel()"
+                  >
+                    <i data-lucide="file-spreadsheet"></i> Excel
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- RIGHT: Results -->
-        <div class="cit-results-panel" id="citResultsPanel">
-          <div class="cit-empty" id="citEmpty">
-            <div class="cit-empty-icon">🏢</div>
-            <p>Enter your turnover and profit above to see your CIT liability</p>
-          </div>
-
-          <div class="cit-output hidden" id="citOutput">
-            <!-- Company tier badge -->
-            <div class="cit-company-tier" id="citTierBadge"></div>
-
-            <!-- Key results -->
-            <div class="cit-result-block">
-              <div class="cit-result-row">
-                <span>Annual Turnover</span>
-                <span class="cit-val" id="citRTurnover">—</span>
-              </div>
-              <div class="cit-result-row">
-                <span>Assessable Profit</span>
-                <span class="cit-val" id="citRProfit">—</span>
-              </div>
-            </div>
-
-            <div class="cit-result-block highlight">
-              <div class="cit-result-row">
-                <span>CIT Rate</span>
-                <span class="cit-val accent" id="citRRate">—</span>
-              </div>
-              <div class="cit-result-row">
-                <span>CIT Payable</span>
-                <span class="cit-val red" id="citRCIT">—</span>
-              </div>
-              <div class="cit-result-row">
-                <span>Development Levy (4%)</span>
-                <span class="cit-val red" id="citRLevy">—</span>
-              </div>
-              <div class="cit-result-row total-row">
-                <span>Total Tax Payable</span>
-                <span class="cit-val red bold" id="citRTotal">—</span>
-              </div>
-            </div>
-
-            <div class="cit-result-block">
-              <div class="cit-result-row">
-                <span>Net Profit After Tax</span>
-                <span class="cit-val green" id="citRNet">—</span>
-              </div>
-              <div class="cit-result-row">
-                <span>Effective Tax Rate</span>
-                <span class="cit-val accent" id="citREffective">—</span>
-              </div>
-            </div>
-
-            <div class="cit-actions">
-              <button class="cit-save-btn" onclick="saveCIT()">💾 Save to History</button>
-              <button class="cit-pdf-btn" onclick="exportCITPDF()">📄 Export PDF</button>
+        <!-- CIT History -->
+        <div class="cit-hist-section">
+          <div class="cit-hist-header">
+            <span class="cit-hist-title">SAVED CALCULATIONS</span>
+            <div style="display: flex; gap: 8px">
+              <button class="btn-refresh" onclick="loadCITHistory()">
+                ↻ Refresh
+              </button>
+              <button
+                class="btn-excel"
+                id="citHistExcelBtn"
+                onclick="exportCITHistoryExcel()"
+                style="display: none"
+              >
+                <i data-lucide="file-spreadsheet"></i> Excel
+              </button>
             </div>
           </div>
+          <p class="cit-hist-empty hidden" id="citHistEmpty">
+            No saved CIT calculations yet.
+          </p>
+          <div class="cit-hist-grid" id="citHistGrid"></div>
         </div>
       </div>
+    </section>
 
-      <!-- Saved CIT history -->
-      <div class="cit-history-wrap" id="citHistoryWrap">
-        <div class="cit-history-header">
-          <span class="cit-history-title">SAVED CIT CALCULATIONS</span>
-          <button class="btn-refresh" onclick="loadCITHistory()">↻ Refresh</button>
+    <!-- =====================
+       SECTION: VAT (US-020)
+       Visible to: business_owner, tax_consultant
+       ===================== -->
+    <section class="cit-section" id="vat" style="display: none">
+      <div class="cit-inner">
+        <div class="cit-page-header">
+          <h2 class="cit-title">
+            VAT Calculator <span class="cit-nta-badge">NTA 2025</span>
+          </h2>
+          <p class="cit-sub">
+            Value Added Tax — 7.5% on taxable supplies. Remit net VAT to FIRS
+            monthly.
+          </p>
         </div>
-        <div id="citHistoryGrid" class="cit-history-grid"></div>
-        <div class="cit-history-empty hidden" id="citHistoryEmpty">
-          <p>No saved CIT calculations yet.</p>
+
+        <div class="cit-layout">
+          <!-- Inputs -->
+          <div class="cit-inputs-col">
+            <div class="cit-input-card">
+              <div class="cit-card-label">Sales & Purchases for the Period</div>
+
+              <div class="cit-field">
+                <label
+                  >Total Taxable Sales (₦)
+                  <span class="cit-hint">excluding VAT</span></label
+                >
+                <div class="cit-num-wrap">
+                  <span class="cit-prefix">₦</span>
+                  <input
+                    type="number"
+                    id="vatSales"
+                    placeholder="0"
+                    min="0"
+                    oninput="calculateVAT()"
+                  />
+                </div>
+                <span class="cit-hint"
+                  >Revenue from VAT-taxable goods/services this period</span
+                >
+              </div>
+
+              <div class="cit-field">
+                <label
+                  >Input VAT to Claim (₦)
+                  <span class="cit-hint">optional</span></label
+                >
+                <div class="cit-num-wrap">
+                  <span class="cit-prefix">₦</span>
+                  <input
+                    type="number"
+                    id="vatInput"
+                    placeholder="0"
+                    min="0"
+                    oninput="calculateVAT()"
+                  />
+                </div>
+                <span class="cit-hint"
+                  >VAT already paid on business purchases you can reclaim</span
+                >
+              </div>
+
+              <div class="cit-field">
+                <label>Period</label>
+                <select
+                  id="vatPeriod"
+                  class="cit-year-input"
+                  style="width: 100%; padding: 8px 10px"
+                  oninput="calculateVAT()"
+                >
+                  <option value="January 2026">January 2026</option>
+                  <option value="February 2026">February 2026</option>
+                  <option value="March 2026" selected>March 2026</option>
+                  <option value="April 2026">April 2026</option>
+                  <option value="May 2026">May 2026</option>
+                  <option value="June 2026">June 2026</option>
+                  <option value="July 2026">July 2026</option>
+                  <option value="August 2026">August 2026</option>
+                  <option value="September 2026">September 2026</option>
+                  <option value="October 2026">October 2026</option>
+                  <option value="November 2026">November 2026</option>
+                  <option value="December 2026">December 2026</option>
+                </select>
+              </div>
+
+              <!-- Zero-rated guide -->
+              <div class="cit-tier-guide" style="margin-top: 8px">
+                <div class="cit-card-label" style="margin-bottom: 8px">
+                  Zero-Rated & Exempt Categories
+                </div>
+                <div class="cit-tg-row small">
+                  <span class="cit-tg-badge">0%</span
+                  ><span
+                    >Basic food items, medical supplies, educational
+                    materials</span
+                  >
+                </div>
+                <div class="cit-tg-row small">
+                  <span class="cit-tg-badge">0%</span
+                  ><span>Exported goods & services, baby products</span>
+                </div>
+                <div class="cit-tg-row medium">
+                  <span class="cit-tg-badge">Exempt</span
+                  ><span
+                    >Medical services, financial services, residential
+                    rent</span
+                  >
+                </div>
+              </div>
+
+              <div class="cit-field" style="margin-top: 4px">
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    cursor: pointer;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    id="vatZeroRated"
+                    onchange="calculateVAT()"
+                    style="width: 16px; height: 16px; accent-color: #00a86b"
+                  />
+                  <span
+                    >My sales are <strong>zero-rated or exempt</strong> (0% VAT
+                    applies)</span
+                  >
+                </label>
+                <span class="cit-hint"
+                  >Tick this if your business falls into a zero-rated category
+                  above</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Results -->
+          <div class="cit-results-col">
+            <div class="cit-results-card">
+              <div class="cit-empty-state" id="vatEmpty">
+                <div class="cit-empty-icon"><i data-lucide="banknote"></i></div>
+                <p>Enter your taxable sales to calculate VAT liability</p>
+              </div>
+              <div class="cit-output hidden" id="vatOutput">
+                <!-- Zero-rated notice -->
+                <div id="vatZeroNotice" class="cit-tier-result small hidden">
+                  <span class="cit-tier-label"
+                    >ZERO-RATED / EXEMPT — 0% VAT</span
+                  >
+                  <p>
+                    Your sales fall into a zero-rated or exempt category. No VAT
+                    is due. You may still be able to reclaim input VAT paid on
+                    purchases — consult your tax advisor.
+                  </p>
+                </div>
+
+                <!-- Standard results -->
+                <div id="vatStandardResults">
+                  <div class="cit-result-group">
+                    <div class="cit-rrow">
+                      <span>Taxable Sales</span
+                      ><span class="crv" id="vatRSales">—</span>
+                    </div>
+                    <div class="cit-rrow">
+                      <span>VAT Rate</span><span class="crv amber">7.5%</span>
+                    </div>
+                    <div class="cit-rrow">
+                      <span>Output VAT (7.5% of Sales)</span
+                      ><span class="crv red" id="vatROutput">—</span>
+                    </div>
+                  </div>
+                  <div class="cit-result-group">
+                    <div class="cit-rrow">
+                      <span>Input VAT Reclaimable</span
+                      ><span class="crv green" id="vatRInput">—</span>
+                    </div>
+                  </div>
+                  <div class="cit-result-group primary">
+                    <div class="cit-rrow total" id="vatNetRow">
+                      <span id="vatNetLabel">Net VAT Payable to FIRS</span>
+                      <span class="crv bold" id="vatRNet">—</span>
+                    </div>
+                    <div class="cit-rrow" style="font-size: 11px; opacity: 0.5">
+                      <span>Remit by 21st of following month</span>
+                      <span id="vatRDue">—</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cit-btn-row">
+                  <button class="cit-action-btn save" onclick="saveVAT()">
+                    <i data-lucide="save"></i> Save
+                  </button>
+                  <button class="cit-action-btn pdf" onclick="exportVATPDF()">
+                    <i data-lucide="file-text"></i> PDF
+                  </button>
+                  <button
+                    class="cit-action-btn excel"
+                    onclick="exportVATExcel()"
+                  >
+                    <i data-lucide="file-spreadsheet"></i> Excel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VAT History -->
+        <div class="cit-hist-section">
+          <div class="cit-hist-header">
+            <span class="cit-hist-title">SAVED VAT RECORDS</span>
+            <div style="display: flex; gap: 8px">
+              <button class="btn-refresh" onclick="loadVATHistory()">
+                ↻ Refresh
+              </button>
+              <button
+                class="btn-excel"
+                id="vatHistExcelBtn"
+                onclick="exportVATHistoryExcel()"
+                style="display: none"
+              >
+                <i data-lucide="file-spreadsheet"></i> Excel
+              </button>
+            </div>
+          </div>
+          <p class="cit-hist-empty hidden" id="vatHistEmpty">
+            No saved VAT records yet.
+          </p>
+          <div class="cit-hist-grid" id="vatHistGrid"></div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ================================================
-       INFO / HELP SECTION
-       Visible: all logged-in users
-       ================================================ -->
-  <section class="info-section" id="info" style="display:none">
-    <div class="info-inner">
-      <div class="info-header">
-        <h2 class="info-title">Info & Reference</h2>
-        <p class="info-sub">Tax deadlines, remittance authorities, and NTA 2025 quick reference</p>
-      </div>
-
-      <!-- NTA 2025 Bands Quick Ref -->
-      <div class="info-card">
-        <div class="info-card-title">📊 NTA 2025 — PAYE Tax Bands</div>
-        <table class="info-table">
-          <thead><tr><th>Annual Chargeable Income</th><th>Rate</th><th>Max Tax in Band</th></tr></thead>
-          <tbody>
-            <tr class="zero-rate"><td>First ₦800,000</td><td>0%</td><td>₦0 — Exempt</td></tr>
-            <tr><td>Next ₦2,200,000 (₦800k–₦3m)</td><td>15%</td><td>₦330,000</td></tr>
-            <tr><td>Next ₦9,000,000 (₦3m–₦12m)</td><td>18%</td><td>₦1,620,000</td></tr>
-            <tr><td>Next ₦13,000,000 (₦12m–₦25m)</td><td>21%</td><td>₦2,730,000</td></tr>
-            <tr><td>Next ₦25,000,000 (₦25m–₦50m)</td><td>23%</td><td>₦5,750,000</td></tr>
-            <tr><td>Above ₦50,000,000</td><td>25%</td><td>Unlimited</td></tr>
-          </tbody>
-        </table>
-        <p class="info-note">Employees earning ₦800,000/year (≈ ₦66,667/month) or less pay zero PAYE tax.</p>
-      </div>
-
-      <!-- Key Deadlines -->
-      <div class="info-card">
-        <div class="info-card-title">📅 Key Tax Deadlines</div>
-        <table class="info-table">
-          <thead><tr><th>Obligation</th><th>Deadline</th><th>Authority</th></tr></thead>
-          <tbody>
-            <tr><td>Monthly PAYE Remittance</td><td>10th of the following month</td><td>State Internal Revenue Service</td></tr>
-            <tr><td>NHF Remittance</td><td>Monthly alongside PAYE</td><td>Federal Mortgage Bank (FMBN)</td></tr>
-            <tr><td>Pension Remittance</td><td>Within 7 days of salary payment</td><td>Pension Fund Administrator (PFA)</td></tr>
-            <tr><td>Annual PAYE Returns (Form A)</td><td>31 January each year</td><td>State Internal Revenue Service</td></tr>
-            <tr><td>Personal Income Tax Returns</td><td>31 March each year</td><td>State Internal Revenue Service</td></tr>
-            <tr><td>Company Income Tax Returns</td><td>6 months after financial year end</td><td>FIRS</td></tr>
-            <tr><td>CIT Estimated Tax (Provisional)</td><td>3 months after financial year start</td><td>FIRS</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- State Remittance Guide -->
-      <div class="info-card">
-        <div class="info-card-title">🗺️ State PAYE Remittance Guide — All 36 States + FCT</div>
-        <p class="info-note" style="margin-bottom:16px">PAYE is remitted to the Internal Revenue Service of the state where the employee <strong>works</strong> — not where the employer's head office is located.</p>
-        <div class="info-search-wrap">
-          <input type="text" id="stateSearch" class="info-search" placeholder="Search state..." oninput="filterStates()" />
+    <!-- =====================
+       SECTION: BUSINESS TAX SUMMARY (US-022 / US-023)
+       Combined CIT + VAT + Dev Levy view per period
+       Visible to: business_owner, tax_consultant
+       ===================== -->
+    <section class="cit-section" id="bizsummary" style="display: none">
+      <div class="cit-inner">
+        <div class="cit-page-header">
+          <h2 class="cit-title">
+            Business Tax Summary <span class="cit-nta-badge">NTA 2025</span>
+          </h2>
+          <p class="cit-sub">
+            Combined view of your CIT, Development Levy, and VAT obligations for
+            the period. Calculate on the individual tabs first, then return here
+            to export a combined report.
+          </p>
         </div>
-        <div class="state-grid" id="stateGrid"></div>
+
+        <!-- Live summary cards pulled from lastCIT + lastVAT -->
+        <div class="bts-live-section">
+          <div class="bts-live-header">
+            <span class="cit-card-label">CURRENT PERIOD SUMMARY</span>
+            <button class="btn-refresh" onclick="refreshBizSummary()">
+              ↻ Refresh
+            </button>
+          </div>
+
+          <div id="btsNotice" class="bts-notice">
+            <span class="bts-notice-icon"><i data-lucide="info"></i></span>
+            <span
+              >Go to <strong>Business Tax</strong> and <strong>VAT</strong> tabs
+              and enter your figures, then come back here to see your combined
+              tax picture and export a board-ready report.</span
+            >
+          </div>
+
+          <div id="btsLiveContent" class="hidden">
+            <!-- Period / Company banner -->
+            <div class="bts-banner">
+              <div class="bts-banner-left">
+                <span class="bts-company" id="btsBannerCompany">—</span>
+                <span class="bts-period" id="btsBannerPeriod">—</span>
+              </div>
+              <div class="bts-banner-right">
+                <div class="bts-total-label">Total Business Tax Obligation</div>
+                <div class="bts-total-amt" id="btsTotalObligation">—</div>
+              </div>
+            </div>
+
+            <!-- Three component cards -->
+            <div class="bts-cards">
+              <div class="bts-card cit">
+                <div class="bts-card-icon"><i data-lucide="landmark"></i></div>
+                <div class="bts-card-label">Company Income Tax</div>
+                <div class="bts-card-amt" id="btsCITAmt">—</div>
+                <div class="bts-card-detail" id="btsCITDetail">—</div>
+                <div class="bts-card-tag" id="btsCITTag">—</div>
+              </div>
+
+              <div class="bts-card levy">
+                <div class="bts-card-icon">
+                  <i data-lucide="clipboard-list"></i>
+                </div>
+                <div class="bts-card-label">Development Levy</div>
+                <div class="bts-card-amt" id="btsLevyAmt">—</div>
+                <div class="bts-card-detail" id="btsLevyDetail">—</div>
+                <div class="bts-card-tag">4% of assessable profit</div>
+              </div>
+
+              <div class="bts-card vat">
+                <div class="bts-card-icon"><i data-lucide="receipt"></i></div>
+                <div class="bts-card-label">VAT (Net Payable)</div>
+                <div class="bts-card-amt" id="btsVATAmt">—</div>
+                <div class="bts-card-detail" id="btsVATDetail">—</div>
+                <div class="bts-card-tag" id="btsVATTag">
+                  7.5% on taxable supplies
+                </div>
+              </div>
+            </div>
+
+            <!-- Breakdown table -->
+            <div class="bts-breakdown">
+              <div class="bts-breakdown-row header">
+                <span>Component</span><span>Rate</span><span>Base</span
+                ><span>Amount</span>
+              </div>
+              <div class="bts-breakdown-row" id="btsRowCIT"></div>
+              <div class="bts-breakdown-row" id="btsRowLevy"></div>
+              <div class="bts-breakdown-row" id="btsRowVAT"></div>
+              <div class="bts-breakdown-row total" id="btsRowTotal"></div>
+            </div>
+
+            <!-- Export buttons -->
+            <div class="bts-export-row">
+              <button
+                class="bts-export-btn pdf"
+                onclick="exportBizSummaryPDF()"
+              >
+                <i data-lucide="file-text"></i> Export Combined PDF
+              </button>
+              <button
+                class="bts-export-btn excel"
+                onclick="exportBizSummaryExcel()"
+              >
+                <i data-lucide="file-spreadsheet"></i> Export Combined Excel
+              </button>
+              <button class="bts-export-btn save" onclick="saveBizSummary()">
+                <i data-lucide="save"></i> Save to History
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Combined History -->
+        <div class="cit-hist-section" style="margin-top: 32px">
+          <div class="cit-hist-header">
+            <span class="cit-hist-title"
+              >BUSINESS TAX HISTORY — ALL PERIODS</span
+            >
+            <div style="display: flex; gap: 8px">
+              <button class="btn-refresh" onclick="loadBizSummaryHistory()">
+                ↻ Refresh
+              </button>
+              <button
+                class="btn-excel"
+                id="bizHistExcelBtn"
+                onclick="exportBizHistoryExcel()"
+                style="display: none"
+              >
+                <i data-lucide="file-spreadsheet"></i> Excel
+              </button>
+            </div>
+          </div>
+          <p class="cit-hist-empty hidden" id="bizHistEmpty">
+            No saved business tax summaries yet. Calculate CIT and VAT, then
+            click "Save to History" above.
+          </p>
+          <div class="cit-hist-grid" id="bizHistGrid"></div>
+        </div>
       </div>
+    </section>
 
-      <!-- Statutory Deduction Rates -->
-      <div class="info-card">
-        <div class="info-card-title">💼 Statutory Deduction Rates (NTA 2025)</div>
-        <table class="info-table">
-          <thead><tr><th>Deduction</th><th>Employee Rate</th><th>Employer Rate</th><th>Base</th></tr></thead>
-          <tbody>
-            <tr><td>Pension (PRA 2014)</td><td>8%</td><td>10%</td><td>Basic + Housing + Transport</td></tr>
-            <tr><td>NHF</td><td>2.5%</td><td>—</td><td>Basic Salary</td></tr>
-            <tr><td>NHIS</td><td>5%</td><td>10%</td><td>Basic Salary</td></tr>
-            <tr><td>NSITF</td><td>—</td><td>1%</td><td>Total Emolument</td></tr>
-            <tr><td>ITF</td><td>—</td><td>1%</td><td>Annual Payroll (≥5 employees)</td></tr>
-          </tbody>
-        </table>
+    <!-- FOOTER -->
+    <!-- =====================
+         SECTION: ABOUT US
+         ===================== -->
+    <section class="about-section" id="about">
+      <div class="lp-section-inner" style="text-align: left; max-width: 1100px">
+        <div style="text-align: center; margin-bottom: 64px">
+          <div class="lp-section-label">About TaxCalc</div>
+          <h2 class="lp-section-title">
+            Built for Nigerian Taxpayers.<br />By People Who Understand Nigeria.
+          </h2>
+          <p class="lp-section-sub" style="max-width: 600px; margin: 0 auto">
+            TaxCalc NTA 2025 is a free, private tax calculator built to make
+            Nigeria's new tax law understandable and usable for everyone —
+            employees, business owners, HR teams, and accountants alike.
+          </p>
+        </div>
+
+        <!-- Mission strip -->
+        <div class="about-mission">
+          <div class="about-mission-text">
+            <div class="lp-section-label" style="text-align: left">
+              Our Mission
+            </div>
+            <h3 class="about-mission-title">Tax clarity for every Nigerian</h3>
+            <p>
+              The Nigeria Tax Act 2025 is the biggest overhaul of Nigeria's tax
+              system in decades. New bands, new reliefs, new levies — and most
+              people don't know how it affects them. TaxCalc exists to change
+              that. We do the maths so you don't have to, and we show you every
+              step so you can verify it yourself.
+            </p>
+          </div>
+          <div class="about-mission-stats">
+            <div class="about-stat">
+              <span class="about-stat-num">6</span
+              ><span class="about-stat-label">NTA 2025 tax bands computed</span>
+            </div>
+            <div class="about-stat">
+              <span class="about-stat-num">4</span
+              ><span class="about-stat-label">User roles supported</span>
+            </div>
+            <div class="about-stat">
+              <span class="about-stat-num">23</span
+              ><span class="about-stat-label">Features built & tested</span>
+            </div>
+            <div class="about-stat">
+              <span class="about-stat-num">₦0</span
+              ><span class="about-stat-label">Cost to use, forever</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full feature guide -->
+        <div style="margin-top: 72px">
+          <div style="text-align: center; margin-bottom: 48px">
+            <div class="lp-section-label">Complete Guide</div>
+            <h2 class="lp-section-title">Everything Inside TaxCalc</h2>
+            <p class="lp-section-sub">
+              A full walkthrough of every tool — what it does, who it's for, and
+              how to use it.
+            </p>
+          </div>
+
+          <div class="about-guide-grid">
+            <div class="about-guide-card">
+              <div class="about-guide-header" onclick="toggleGuideCard(this)">
+                <span class="about-guide-icon"
+                  ><i data-lucide="calculator"></i
+                ></span>
+                <div>
+                  <h3>PAYE Calculator</h3>
+                  <span class="about-guide-tag">All Users</span>
+                </div>
+                <span class="about-guide-chevron">⌄</span>
+              </div>
+              <div class="about-guide-teaser">
+                Compute your exact monthly take-home under NTA 2025 — every
+                deduction shown, every band explained.
+              </div>
+              <div class="about-guide-body">
+                <p>
+                  The heart of TaxCalc. Enter your salary components — basic,
+                  housing, transport, and other allowances — and get your full
+                  PAYE breakdown instantly under both
+                  <strong>NTA 2025</strong> and the old
+                  <strong>PITA regime</strong> side by side.
+                </p>
+                <div class="about-guide-steps">
+                  <div class="about-step">
+                    <span class="about-step-n">1</span
+                    ><span
+                      >Enter your basic salary (monthly or annual toggle)</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">2</span
+                    ><span>Add housing, transport, and other allowances</span>
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">3</span
+                    ><span
+                      >Add annual rent if applicable for NTA 2025 rent relief
+                      (up to ₦500,000)</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">4</span
+                    ><span
+                      >See your pension, NHF, NHIS deductions, PAYE tax, and
+                      take-home pay instantly</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">5</span
+                    ><span
+                      >Expand the band workings to see exactly how PAYE is
+                      computed tier by tier</span
+                    >
+                  </div>
+                </div>
+                <div class="about-guide-note">
+                  <i data-lucide="lightbulb"></i> The NTA 2025 first band is
+                  ₦800,000 at 0% — meaning the first ₦800k of your chargeable
+                  income is completely tax-free.
+                </div>
+              </div>
+            </div>
+
+            <!-- YTD Tracker -->
+            <div class="about-guide-card">
+              <div class="about-guide-header" onclick="toggleGuideCard(this)">
+                <span class="about-guide-icon"
+                  ><i data-lucide="calendar"></i
+                ></span>
+                <div>
+                  <h3>YTD Tracker</h3>
+                  <span class="about-guide-tag">All Users</span>
+                </div>
+                <span class="about-guide-chevron">⌄</span>
+              </div>
+              <div class="about-guide-teaser">
+                See how much PAYE you've paid so far this year — and whether
+                your employer is remitting correctly.
+              </div>
+              <div class="about-guide-body">
+                <p>
+                  Your Year-To-Date tax position. See exactly how much PAYE
+                  you've paid so far this year and how much remains. Essential
+                  if you want to plan your finances or verify your employer is
+                  remitting correctly.
+                </p>
+                <div class="about-guide-steps">
+                  <div class="about-step">
+                    <span class="about-step-n">1</span
+                    ><span
+                      >Enter your salary components (same as calculator)</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">2</span
+                    ><span
+                      >Use the month slider to set how many months have
+                      passed</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">3</span
+                    ><span
+                      >See PAYE paid to date, remaining liability, and full-year
+                      projection</span
+                    >
+                  </div>
+                </div>
+                <div class="about-guide-note">
+                  <i data-lucide="lightbulb"></i> Useful in November or December
+                  to check if you've overpaid or underpaid tax — and whether to
+                  expect a refund.
+                </div>
+              </div>
+            </div>
+
+            <!-- History -->
+            <div class="about-guide-card">
+              <div class="about-guide-header" onclick="toggleGuideCard(this)">
+                <span class="about-guide-icon"
+                  ><i data-lucide="folder-open"></i
+                ></span>
+                <div>
+                  <h3>Calculation History</h3>
+                  <span class="about-guide-tag">All Users</span>
+                </div>
+                <span class="about-guide-chevron">⌄</span>
+              </div>
+              <div class="about-guide-teaser">
+                Every saved calculation stored privately — revisit any salary
+                breakdown from any point in time.
+              </div>
+              <div class="about-guide-body">
+                <p>
+                  Every calculation you save is stored privately in your
+                  account. Come back months later and see your exact salary,
+                  deductions, and tax at any point in time — no one else can
+                  ever see your records.
+                </p>
+                <div class="about-guide-steps">
+                  <div class="about-step">
+                    <span class="about-step-n">1</span
+                    ><span>Run a calculation on the Calculator tab</span>
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">2</span
+                    ><span
+                      >Click "Save Calculation" at the bottom of the
+                      results</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">3</span
+                    ><span
+                      >Visit the History tab to view, expand, export, or delete
+                      any saved record</span
+                    >
+                  </div>
+                </div>
+                <div class="about-guide-note">
+                  <i data-lucide="lightbulb"></i> Your data is protected by
+                  Supabase Row-Level Security — it is mathematically impossible
+                  for another user to view your records.
+                </div>
+              </div>
+            </div>
+
+            <!-- Payroll -->
+            <div class="about-guide-card">
+              <div class="about-guide-header" onclick="toggleGuideCard(this)">
+                <span class="about-guide-icon"
+                  ><i data-lucide="users"></i
+                ></span>
+                <div>
+                  <h3>Payroll Manager</h3>
+                  <span class="about-guide-tag"
+                    >HR Managers &amp; Business Owners</span
+                  >
+                </div>
+                <span class="about-guide-chevron">⌄</span>
+              </div>
+              <div class="about-guide-teaser">
+                Run full monthly payroll for your entire team — compute PAYE per
+                employee and export in one click.
+              </div>
+              <div class="about-guide-body">
+                <p>
+                  Run full monthly payroll for multiple employees. Add each
+                  staff member's salary details, compute PAYE for every person
+                  simultaneously, and export the complete payroll run as PDF or
+                  Excel.
+                </p>
+                <div class="about-guide-steps">
+                  <div class="about-step">
+                    <span class="about-step-n">1</span
+                    ><span
+                      >Go to the Payroll tab (visible to HR Manager and Business
+                      Owner roles)</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">2</span
+                    ><span
+                      >Add employees — name, basic, housing, transport, other
+                      allowances</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">3</span
+                    ><span>Select the pay month and click Run Payroll</span>
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">4</span
+                    ><span
+                      >Review the payroll table — gross, deductions, PAYE, and
+                      net per employee</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">5</span
+                    ><span
+                      >Export as PDF (formal payroll sheet) or Excel (for FIRS
+                      remittance schedules)</span
+                    >
+                  </div>
+                </div>
+                <div class="about-guide-note">
+                  <i data-lucide="lightbulb"></i> Payroll runs are saved to
+                  history so you have a complete monthly record of all
+                  remittances.
+                </div>
+              </div>
+            </div>
+
+            <!-- CIT / Business Tax -->
+            <div class="about-guide-card">
+              <div class="about-guide-header" onclick="toggleGuideCard(this)">
+                <span class="about-guide-icon"
+                  ><i data-lucide="landmark"></i
+                ></span>
+                <div>
+                  <h3>Business Tax (CIT)</h3>
+                  <span class="about-guide-tag"
+                    >Business Owners &amp; Accountants</span
+                  >
+                </div>
+                <span class="about-guide-chevron">⌄</span>
+              </div>
+              <div class="about-guide-teaser">
+                Auto-classify your company as Small, Medium, or Large — and see
+                your CIT + Development Levy instantly.
+              </div>
+              <div class="about-guide-body">
+                <p>
+                  <strong>Company Income Tax</strong> is what Nigerian companies
+                  pay on profit — separate from PAYE which employees pay. Under
+                  NTA 2025, companies are classified into three tiers based on
+                  turnover and assets, each with a different rate.
+                </p>
+                <div class="about-guide-steps">
+                  <div class="about-step">
+                    <span class="about-step-n">1</span
+                    ><span>Go to Business → Business Tax</span>
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">2</span
+                    ><span
+                      >Enter your company name, period (quarterly or full year),
+                      annual turnover, assessable profit, and total assets</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">3</span
+                    ><span
+                      >TaxCalc automatically classifies your company:
+                      <strong>Small</strong> (0% CIT),
+                      <strong>Medium</strong> (20%), or
+                      <strong>Large</strong> (30%)</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">4</span
+                    ><span
+                      >See CIT payable, Development Levy (4%), total tax, net
+                      profit after tax, and effective rate</span
+                    >
+                  </div>
+                </div>
+                <div class="about-guide-note">
+                  <i data-lucide="lightbulb"></i>
+                  <strong>Small companies</strong> = turnover under ₦50m AND
+                  assets ≤ ₦250m → pay 0% CIT and are exempt from the
+                  Development Levy. The 4% Development Levy under NTA 2025
+                  replaces four separate levies that previously existed (NITDA,
+                  NASENI, Education Tax, Police Trust Fund).
+                </div>
+              </div>
+            </div>
+
+            <!-- VAT -->
+            <div class="about-guide-card">
+              <div class="about-guide-header" onclick="toggleGuideCard(this)">
+                <span class="about-guide-icon"
+                  ><i data-lucide="banknote"></i
+                ></span>
+                <div>
+                  <h3>VAT Calculator</h3>
+                  <span class="about-guide-tag"
+                    >Business Owners &amp; Accountants</span
+                  >
+                </div>
+                <span class="about-guide-chevron">⌄</span>
+              </div>
+              <div class="about-guide-teaser">
+                Output minus input VAT = what you remit to FIRS. Zero-rated?
+                TaxCalc flags it automatically.
+              </div>
+              <div class="about-guide-body">
+                <p>
+                  <strong>Value Added Tax</strong> in Nigeria is charged at 7.5%
+                  on taxable goods and services. Businesses collect VAT from
+                  customers (output VAT) and can reclaim VAT they paid on
+                  business purchases (input VAT). You remit the net difference
+                  to FIRS monthly.
+                </p>
+                <div class="about-guide-steps">
+                  <div class="about-step">
+                    <span class="about-step-n">1</span
+                    ><span>Go to Business → VAT</span>
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">2</span
+                    ><span
+                      >Enter your total taxable sales for the period (excluding
+                      VAT)</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">3</span
+                    ><span
+                      >Enter any input VAT you can claim from business
+                      purchases</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">4</span
+                    ><span
+                      >If your business is zero-rated or exempt (food, medical,
+                      education, exports), tick the checkbox — no VAT is
+                      due</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">5</span
+                    ><span
+                      >See your net VAT payable and the due date (21st of the
+                      following month)</span
+                    >
+                  </div>
+                </div>
+                <div class="about-guide-note">
+                  <i data-lucide="lightbulb"></i> If your input VAT exceeds
+                  output VAT, the result is a <strong>VAT refund</strong> —
+                  TaxCalc flags this clearly so you know to file a refund claim
+                  with FIRS.
+                </div>
+              </div>
+            </div>
+
+            <!-- Tax Summary -->
+            <div class="about-guide-card">
+              <div class="about-guide-header" onclick="toggleGuideCard(this)">
+                <span class="about-guide-icon"
+                  ><i data-lucide="bar-chart-2"></i
+                ></span>
+                <div>
+                  <h3>Business Tax Summary</h3>
+                  <span class="about-guide-tag"
+                    >Business Owners &amp; Accountants</span
+                  >
+                </div>
+                <span class="about-guide-chevron">⌄</span>
+              </div>
+              <div class="about-guide-teaser">
+                CIT + VAT + Development Levy in one view. Export a board-ready
+                PDF for auditors or FIRS.
+              </div>
+              <div class="about-guide-body">
+                <p>
+                  Your combined business tax picture in one place. After
+                  calculating CIT and VAT on their individual tabs, visit Tax
+                  Summary to see all three components — CIT, Development Levy,
+                  and VAT — side by side with a single total obligation figure.
+                </p>
+                <div class="about-guide-steps">
+                  <div class="about-step">
+                    <span class="about-step-n">1</span
+                    ><span>Calculate CIT on the Business Tax tab</span>
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">2</span
+                    ><span>Calculate VAT on the VAT tab</span>
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">3</span
+                    ><span
+                      >Go to Business → Tax Summary — all figures populate
+                      automatically</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">4</span
+                    ><span
+                      >Export a combined PDF (board-ready, A4 with summary boxes
+                      and full breakdown table) or Excel</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">5</span
+                    ><span
+                      >Click Save to History to store the combined summary for
+                      future reference</span
+                    >
+                  </div>
+                </div>
+                <div class="about-guide-note">
+                  <i data-lucide="lightbulb"></i> The combined PDF is designed
+                  to be attached to board packs or sent to auditors — it
+                  includes the tier badge, all three tax amounts, effective
+                  rates, and the NTA 2025 disclaimer.
+                </div>
+              </div>
+            </div>
+
+            <!-- Client Profiles -->
+            <div class="about-guide-card">
+              <div class="about-guide-header" onclick="toggleGuideCard(this)">
+                <span class="about-guide-icon"
+                  ><i data-lucide="users"></i
+                ></span>
+                <div>
+                  <h3>Client Profiles</h3>
+                  <span class="about-guide-tag">Accountants Only</span>
+                </div>
+                <span class="about-guide-chevron">⌄</span>
+              </div>
+              <div class="about-guide-teaser">
+                Save client salary details once, reload in seconds. No more
+                re-entering the same numbers every month.
+              </div>
+              <div class="about-guide-body">
+                <p>
+                  Save your clients' salary details once and reload them in
+                  seconds. Designed for accountants and tax consultants who
+                  calculate PAYE for multiple clients regularly — no more
+                  re-entering the same numbers every month.
+                </p>
+                <div class="about-guide-steps">
+                  <div class="about-step">
+                    <span class="about-step-n">1</span
+                    ><span>Go to the Clients tab (Accountant role only)</span>
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">2</span
+                    ><span
+                      >Create a new client profile — name, salary components,
+                      and notes</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">3</span
+                    ><span
+                      >Click Load on any profile to pre-fill the calculator
+                      instantly</span
+                    >
+                  </div>
+                  <div class="about-step">
+                    <span class="about-step-n">4</span
+                    ><span
+                      >View the full calculation history filtered by
+                      client</span
+                    >
+                  </div>
+                </div>
+                <div class="about-guide-note">
+                  <i data-lucide="lightbulb"></i> Registering with the
+                  Accountant role unlocks both the Clients tab and the Business
+                  Tax tools, making it the most powerful role for tax
+                  professionals.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NTA 2025 bands quick reference -->
+        <div class="about-bands">
+          <div style="text-align: center; margin-bottom: 40px">
+            <div class="lp-section-label">Quick Reference</div>
+            <h2 class="lp-section-title">NTA 2025 PAYE Tax Bands</h2>
+            <p class="lp-section-sub">
+              Progressive rates applied to your chargeable income after all
+              reliefs and deductions
+            </p>
+          </div>
+          <div class="about-bands-table">
+            <div class="about-band-row header">
+              <span>Band</span><span>Chargeable Income</span><span>Rate</span
+              ><span>Max Tax in Band</span>
+            </div>
+            <div class="about-band-row">
+              <span>1</span><span>First ₦800,000</span
+              ><span class="band-rate zero">0%</span><span>₦0</span>
+            </div>
+            <div class="about-band-row">
+              <span>2</span><span>Next ₦2,200,000</span
+              ><span class="band-rate low">15%</span><span>₦330,000</span>
+            </div>
+            <div class="about-band-row">
+              <span>3</span><span>Next ₦9,000,000</span
+              ><span class="band-rate mid">18%</span><span>₦1,620,000</span>
+            </div>
+            <div class="about-band-row">
+              <span>4</span><span>Next ₦12,000,000</span
+              ><span class="band-rate mid">21%</span><span>₦2,520,000</span>
+            </div>
+            <div class="about-band-row">
+              <span>5</span><span>Next ₦16,000,000</span
+              ><span class="band-rate high">23%</span><span>₦3,680,000</span>
+            </div>
+            <div class="about-band-row">
+              <span>6</span><span>Above ₦40,000,000</span
+              ><span class="band-rate top">25%</span><span>Unlimited</span>
+            </div>
+          </div>
+          <p
+            style="
+              font-size: 12px;
+              color: #999;
+              text-align: center;
+              margin-top: 16px;
+            "
+          >
+            Reliefs applied before tax: Consolidated Relief Allowance (20% of
+            gross + ₦200,000), Pension (8%), NHF (2.5%), NHIS (5%), and Rent
+            Relief (up to ₦500,000 annually under NTA 2025).
+          </p>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- FOOTER -->
-  <footer class="site-footer">
-    <p>Based on the <strong>Nigeria Tax Act 2025</strong>. For reference purposes only. Consult a tax professional for advice.</p>
-  </footer>
+    <!-- =====================
+         SECTION: BLOG
+         ===================== -->
+    <section class="blog-section" id="blog">
+      <div class="lp-section-inner">
+        <div class="lp-section-label light">Blog</div>
+        <h2 class="lp-section-title light">From the TaxCalc Blog</h2>
+        <p class="lp-section-sub light">
+          Plain-English guides to understanding NTA 2025 and what it means for
+          your money
+        </p>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<button id="themeToggleBtn" onclick="toggleTheme()" style="position:fixed;bottom:20px;right:20px;background:#00A86B;border:none;color:white;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:600;z-index:9999;font-size:13px;box-shadow:0 2px 10px rgba(0,0,0,0.25);">&#9790; Dark</button>
+        <div class="blog-grid" id="blogGrid">
+          <!-- FEATURED ARTICLE — two-column hero -->
+          <div class="blog-card featured-blog">
+            <div class="blog-featured-left">
+              <div class="blog-meta">
+                <span class="blog-cat">NTA 2025</span>
+                <span class="blog-date">March 2026</span>
+              </div>
+              <div class="blog-card-tag">Must Read</div>
+              <h3>
+                What the Nigeria Tax Act 2025 Actually Means for Your Salary
+              </h3>
+              <p class="blog-featured-sub">
+                The most important tax change in two decades — explained simply.
+              </p>
+              <button
+                class="blog-read-btn"
+                onclick="showAuthOverlay('registerPanel')"
+              >
+                Calculate yours free →
+              </button>
+            </div>
+            <div class="blog-featured-right">
+              <p>
+                The NTA 2025 replaces the decades-old PITA. The first ₦800,000
+                of your chargeable income is now completely tax-free — up from
+                ₦300,000. For most employees earning ₦2m–₦10m annually, this
+                means meaningfully lower PAYE every month.
+              </p>
+              <p>
+                The new rent relief — up to ₦500,000 off your taxable income —
+                is an additional benefit most employees aren't claiming because
+                their employers haven't updated payroll yet. Use the TaxCalc
+                comparison tool to see exactly how much you save.
+              </p>
+            </div>
+          </div>
 
-  <script src="script.js"></script>
+          <!-- SMALL CARDS — title + 2-line teaser only -->
+          <div class="blog-card">
+            <div class="blog-meta">
+              <span class="blog-cat">Business Tax</span
+              ><span class="blog-date">Feb 2026</span>
+            </div>
+            <h3>CIT Tiers Explained: Small, Medium, or Large?</h3>
+            <p class="blog-teaser">
+              Small companies (under ₦50m turnover) pay zero CIT. Medium pay
+              20%. Large pay 30%. Plus the new 4% consolidated Development Levy.
+            </p>
+            <button class="blog-expand-btn" onclick="toggleBlogCard(this)">
+              Read more ↓
+            </button>
+            <p class="blog-full hidden">
+              Under NTA 2025, your CIT liability depends entirely on which tier
+              you fall into. Small companies with turnover under ₦50m AND assets
+              not more than ₦250m pay zero CIT and are fully exempt from the
+              Development Levy — a significant advantage for SMEs. Medium
+              companies pay 20% CIT plus 4% levy. Large pay 30% plus the levy.
+              The 4% Development Levy consolidates what were previously four
+              separate levies: NITDA (1%), NASENI (0.5%), Education Tax (2%),
+              and Police Trust Fund (0.5%) — simplifying compliance
+              considerably.
+            </p>
+          </div>
 
-</body>
+          <div class="blog-card">
+            <div class="blog-meta">
+              <span class="blog-cat">VAT</span
+              ><span class="blog-date">Feb 2026</span>
+            </div>
+            <h3>VAT 2025: What You Collect, Keep, and Remit</h3>
+            <p class="blog-teaser">
+              Nigeria's VAT stays at 7.5%. Output minus input = what you remit
+              to FIRS by the 21st of the following month.
+            </p>
+            <button class="blog-expand-btn" onclick="toggleBlogCard(this)">
+              Read more ↓
+            </button>
+            <p class="blog-full hidden">
+              As a VAT-registered business, you collect output VAT from
+              customers on every taxable sale and can reclaim input VAT on
+              business purchases. If input exceeds output in any month, you have
+              a VAT credit to carry forward or claim as a refund. Zero-rated
+              categories include basic food items, medical supplies, educational
+              materials, exported goods, and baby products — businesses in these
+              categories charge 0% and may still reclaim input VAT.
+            </p>
+          </div>
+
+          <div class="blog-card">
+            <div class="blog-meta">
+              <span class="blog-cat">Payroll</span
+              ><span class="blog-date">Jan 2026</span>
+            </div>
+            <h3>HR Guide: Updating Your Payroll for NTA 2025</h3>
+            <p class="blog-teaser">
+              Haven't updated payroll yet? You're likely over-deducting PAYE
+              from every employee's salary right now.
+            </p>
+            <button class="blog-expand-btn" onclick="toggleBlogCard(this)">
+              Read more ↓
+            </button>
+            <p class="blog-full hidden">
+              Practical steps: update your payroll software's tax table, confirm
+              the new CRA formula (20% of gross income + ₦200,000), implement
+              rent relief for employees who provide rent receipts, and run the
+              NTA 2025 vs PITA comparison for each employee to quantify the
+              difference. TaxCalc's Payroll tab lets you do this for your entire
+              team in one run.
+            </p>
+          </div>
+
+          <div class="blog-card">
+            <div class="blog-meta">
+              <span class="blog-cat">Accountants</span
+              ><span class="blog-date">Jan 2026</span>
+            </div>
+            <h3>Accountant's Checklist: Every Client Under NTA 2025</h3>
+            <p class="blog-teaser">
+              A systematic review every accountant should run for individual and
+              corporate clients this year.
+            </p>
+            <button class="blog-expand-btn" onclick="toggleBlogCard(this)">
+              Read more ↓
+            </button>
+            <p class="blog-full hidden">
+              For individual clients: verify CRA application, confirm rent
+              relief documentation, check pension at 8% of basic + housing +
+              transport. For corporate clients: confirm CIT tier, check if they
+              now qualify as small company (the ₦250m assets threshold catches
+              many), calculate the 4% consolidated levy, and prepare the
+              combined CIT + VAT + levy summary for the board.
+            </p>
+          </div>
+
+          <div class="blog-card">
+            <div class="blog-meta">
+              <span class="blog-cat">Personal Finance</span
+              ><span class="blog-date">Dec 2025</span>
+            </div>
+            <h3>Rent Relief: The Benefit Most Employees Are Missing</h3>
+            <p class="blog-teaser">
+              Up to ₦500,000 off your taxable income. That's a real saving of
+              ₦90k–₦105k per year for most employees.
+            </p>
+            <button class="blog-expand-btn" onclick="toggleBlogCard(this)">
+              Read more ↓
+            </button>
+            <p class="blog-full hidden">
+              To claim it, your employer needs to include your annual rent in
+              their payroll computation and you need to provide a rental
+              agreement or receipts. Many employers have not yet implemented
+              this — if yours hasn't, you may be entitled to a tax refund for
+              months since NTA 2025 took effect. Enter your rent in TaxCalc to
+              see your personal saving.
+            </p>
+          </div>
+
+          <div class="blog-card">
+            <div class="blog-meta">
+              <span class="blog-cat">NTA 2025</span
+              ><span class="blog-date">Mar 2026</span>
+            </div>
+            <h3>Pension Under NTA 2025: What Changed and What Didn't</h3>
+            <p class="blog-teaser">
+              Your pension contribution is still 8% — but the base it's
+              calculated on matters more than ever under the new tax rules.
+            </p>
+            <button class="blog-expand-btn" onclick="toggleBlogCard(this)">
+              Read more ↓
+            </button>
+            <p class="blog-full hidden">
+              Under NTA 2025, pension (8% of basic + housing + transport
+              allowances) remains a pre-tax deduction — meaning it reduces your
+              chargeable income before PAYE is computed. This is unchanged from
+              PITA. What has changed is that the expanded zero-rate band and new
+              rent relief interact with pension to create a compounding relief
+              effect: for a mid-range earner, combining pension, CRA, and rent
+              relief can reduce effective PAYE by 30–40% compared to the old
+              regime. Always confirm your employer is computing pension on the
+              correct base — not total gross — as this is one of the most common
+              payroll errors TaxCalc flags.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================
+         SECTION: CONTACT US
+         ===================== -->
+    <section class="contact-section" id="contact">
+      <div class="lp-section-inner">
+        <div class="lp-section-label">Get in Touch</div>
+        <h2 class="lp-section-title">Contact Us</h2>
+        <p class="lp-section-sub">
+          Questions about the app, a tax calculation you're not sure about, or
+          feedback on TaxCalc? We'd love to hear from you.
+        </p>
+
+        <div class="contact-layout">
+          <!-- Contact info cards -->
+          <div class="contact-info-col">
+            <div class="contact-info-card">
+              <div class="contact-info-icon">
+                <i data-lucide="message-circle"></i>
+              </div>
+              <h3>General Enquiries</h3>
+              <p>
+                Questions about how TaxCalc works, feature requests, or anything
+                else about the app.
+              </p>
+            </div>
+            <div class="contact-info-card">
+              <div class="contact-info-icon"><i data-lucide="bug"></i></div>
+              <h3>Bug Reports</h3>
+              <p>
+                Found a calculation that doesn't look right? Tell us — tax
+                accuracy is our top priority.
+              </p>
+            </div>
+            <div class="contact-info-card">
+              <div class="contact-info-icon">
+                <i data-lucide="handshake"></i>
+              </div>
+              <h3>Partnerships</h3>
+              <p>
+                HR software vendors, accounting firms, and fintech companies —
+                let's work together.
+              </p>
+            </div>
+            <div class="contact-info-card">
+              <div class="contact-info-icon"><i data-lucide="scale"></i></div>
+              <h3>Disclaimer</h3>
+              <p>
+                TaxCalc is a reference tool based on the Nigeria Tax Act 2025.
+                It is not a substitute for professional tax advice. Always
+                consult a qualified tax professional before filing.
+              </p>
+            </div>
+          </div>
+
+          <!-- Contact form -->
+          <div class="contact-form-col">
+            <div class="contact-form-card">
+              <h3 class="contact-form-title">Send us a message</h3>
+              <p class="contact-form-sub">
+                We typically respond within 1–2 business days.
+              </p>
+
+              <div class="contact-field">
+                <label>Your Name</label>
+                <input
+                  type="text"
+                  id="contactName"
+                  placeholder="Chukwuemeka Okafor"
+                  class="contact-input"
+                />
+              </div>
+              <div class="contact-field">
+                <label>Email Address</label>
+                <input
+                  type="email"
+                  id="contactEmail"
+                  placeholder="you@example.com"
+                  class="contact-input"
+                />
+              </div>
+              <div class="contact-field">
+                <label>Subject</label>
+                <select id="contactSubject" class="contact-input">
+                  <option value="">Select a topic...</option>
+                  <option>Question about my tax calculation</option>
+                  <option>Bug or incorrect result</option>
+                  <option>Feature request</option>
+                  <option>Partnership enquiry</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="contact-field">
+                <label>Message</label>
+                <textarea
+                  id="contactMessage"
+                  class="contact-input contact-textarea"
+                  placeholder="Tell us what's on your mind..."
+                  rows="5"
+                ></textarea>
+              </div>
+              <button class="contact-submit" onclick="submitContactForm()">
+                Send Message →
+              </button>
+              <p class="contact-disclaimer" id="contactStatus"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <span class="logo-mark">₦</span>
+            TaxCalc <em>NTA 2025</em>
+          </div>
+          <p class="footer-tagline">
+            Free, private Nigerian tax calculation. Built for employees, HR
+            teams, and accountants.
+          </p>
+          <div class="footer-social">
+            <a
+              class="footer-social-btn"
+              onclick="scrollToSection('contact')"
+              title="Contact us"
+              ><i data-lucide="mail" style="width: 15px; height: 15px"></i
+            ></a>
+            <a
+              class="footer-social-btn"
+              onclick="scrollToSection('blog')"
+              title="Blog"
+              ><i data-lucide="rss" style="width: 15px; height: 15px"></i
+            ></a>
+            <a
+              class="footer-social-btn"
+              onclick="showAuthOverlay('registerPanel')"
+              title="Get started"
+              ><i
+                data-lucide="arrow-right"
+                style="width: 15px; height: 15px"
+              ></i
+            ></a>
+          </div>
+        </div>
+        <div class="footer-links-group">
+          <div class="footer-links-col">
+            <span class="footer-col-title">Explore</span>
+            <a onclick="scrollToSection('how-it-works')">How it works</a>
+            <a onclick="scrollToSection('features')">Features</a>
+            <a onclick="scrollToSection('who-its-for')">Who it's for</a>
+          </div>
+          <div class="footer-links-col">
+            <span class="footer-col-title">Company</span>
+            <a onclick="scrollToSection('about')">About Us</a>
+            <a onclick="scrollToSection('blog')">Blog</a>
+            <a onclick="scrollToSection('contact')">Contact</a>
+          </div>
+          <div class="footer-links-col">
+            <span class="footer-col-title">Get Started</span>
+            <a onclick="showAuthOverlay('registerPanel')"
+              >Create Free Account</a
+            >
+            <a onclick="showAuthOverlay('loginPanel')">Sign In</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>
+          Based on the <strong>Nigeria Tax Act 2025</strong>. For reference
+          purposes only — consult a qualified tax professional before filing.
+        </p>
+        <p style="margin-top: 6px; opacity: 0.45">
+          © 2026 TaxCalc NTA 2025. All rights reserved.
+        </p>
+      </div>
+    </footer>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="script.js"></script>
+  </body>
 </html>
