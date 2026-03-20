@@ -5140,3 +5140,22 @@ document.addEventListener("DOMContentLoaded", () => {
 function refreshIcons() {
   if (window.lucide) lucide.createIcons();
 }
+
+/* =====================================================
+   MOBILE — Who card tap-to-expand (accordion)
+   Only one card expands at a time on mobile
+   ===================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".who-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      if (window.innerWidth > 768) return;
+      const isOpen = card.classList.contains("mob-expanded");
+      // Collapse ALL cards first
+      document
+        .querySelectorAll(".who-card")
+        .forEach((c) => c.classList.remove("mob-expanded"));
+      // Open only the tapped one if it was closed
+      if (!isOpen) card.classList.add("mob-expanded");
+    });
+  });
+});

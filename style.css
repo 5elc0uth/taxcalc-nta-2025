@@ -7993,3 +7993,293 @@ summary [data-lucide] {
   vertical-align: middle;
   margin-right: 4px;
 }
+
+/* ================================================
+   US-026 — Mobile Responsiveness Fixes (Final)
+   Applied cleanly to original style.css
+   ================================================ */
+
+/* ── Fix 1: Steps — 1 card per row on mobile (≤ 768px) ────── */
+@media (max-width: 768px) {
+  .steps-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+}
+
+/* ── Fix 2 & 3: Features + Who cards — collapsible on mobile ─ */
+/* Keep 1 column on small screens */
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .feature-card.feature-hero {
+    grid-column: span 1 !important;
+  }
+  .who-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .who-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Feature card body — collapsed by default on mobile */
+  .feature-card .feature-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+  }
+  .feature-card.expanded .feature-body {
+    max-height: 400px;
+  }
+  /* Show toggle arrow on feature cards */
+  .feature-card .feature-toggle {
+    display: flex !important;
+  }
+
+  /* Who card body — collapsed by default on mobile */
+  .who-card .who-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+  }
+  .who-card.expanded .who-body {
+    max-height: 400px;
+  }
+  /* Show toggle arrow on who cards */
+  .who-card .who-toggle {
+    display: flex !important;
+  }
+}
+
+/* Toggle arrow button — hidden on desktop, shown on mobile */
+.feature-toggle,
+.who-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 168, 107, 0.1);
+  border: 1px solid rgba(0, 168, 107, 0.2);
+  color: var(--green-light);
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: auto;
+  flex-shrink: 0;
+  transition:
+    background 0.2s,
+    transform 0.3s;
+}
+.feature-toggle.open,
+.who-toggle.open {
+  transform: rotate(180deg);
+  background: rgba(0, 168, 107, 0.2);
+}
+
+/* ── General mobile hero fixes (≤ 480px) ────────────────────── */
+@media (max-width: 480px) {
+  .landing-hero {
+    padding: 72px 20px 60px !important;
+    min-height: auto !important;
+  }
+  .landing-hero-inner {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  .landing-tag {
+    font-size: 11px !important;
+    padding: 5px 12px !important;
+  }
+  .landing-title {
+    font-size: clamp(26px, 7.5vw, 36px) !important;
+    letter-spacing: -0.8px !important;
+    line-height: 1.1 !important;
+    margin-bottom: 14px !important;
+  }
+  .landing-sub {
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    margin-bottom: 24px !important;
+  }
+  .landing-ctas {
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  .landing-ctas .cta-primary,
+  .landing-ctas .cta-secondary {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 14px 20px !important;
+    font-size: 14px !important;
+  }
+  .landing-note {
+    font-size: 12px !important;
+  }
+  /* Keep demo preview card visible */
+  .landing-hero-preview {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+  .preview-card {
+    max-width: 100% !important;
+    padding: 20px !important;
+    border-radius: 16px !important;
+  }
+  /* Section headings */
+  .lp-section-title {
+    font-size: clamp(22px, 6vw, 32px) !important;
+    letter-spacing: -0.5px !important;
+  }
+  .lp-section-sub {
+    font-size: 14px !important;
+  }
+  /* About stats */
+  .about-stats {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+  }
+  /* CTA */
+  .cta-inner {
+    padding: 32px 20px !important;
+  }
+  .cta-title {
+    font-size: clamp(22px, 6vw, 32px) !important;
+  }
+  /* Blog */
+  .blog-card {
+    padding: 20px !important;
+  }
+  .featured-blog {
+    flex-direction: column !important;
+  }
+  /* Contact */
+  .contact-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  /* Footer */
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+}
+
+/* ── Tablet (481–768px) ──────────────────────────────────────── */
+@media (min-width: 481px) and (max-width: 768px) {
+  .landing-hero {
+    padding: 80px 24px 80px !important;
+  }
+  .landing-hero-inner {
+    grid-template-columns: 1fr !important;
+    gap: 40px !important;
+  }
+  .landing-title {
+    font-size: clamp(30px, 5.5vw, 44px) !important;
+  }
+  .landing-ctas {
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+  }
+  .landing-hero-preview {
+    display: flex !important;
+    justify-content: center !important;
+  }
+  .preview-card {
+    max-width: 420px !important;
+  }
+  .contact-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Feature & Who card header layout ───────────────────────── */
+.feature-card-header,
+.who-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.feature-card-header h3,
+.who-card-header h3 {
+  flex: 1;
+}
+
+/* On desktop — body always visible, toggle hidden */
+@media (min-width: 481px) {
+  .feature-body,
+  .who-body {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .feature-toggle,
+  .who-toggle {
+    display: none !important;
+  }
+}
+
+/* ================================================
+   Mobile Fix — Who Cards accordion (FINAL)
+   ================================================ */
+@media (max-width: 768px) {
+  .who-card {
+    cursor: pointer !important;
+  }
+
+  /* Collapse ALL who-lists including featured — force override */
+  .who-card .who-list,
+  .who-card.featured .who-list {
+    max-height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    transition:
+      max-height 0.35s ease,
+      opacity 0.25s ease !important;
+    margin-top: 0 !important;
+  }
+
+  /* Only the tapped card expands */
+  .who-card.mob-expanded .who-list,
+  .who-card.featured.mob-expanded .who-list {
+    max-height: 300px !important;
+    overflow: visible !important;
+    opacity: 1 !important;
+    margin-top: 8px !important;
+  }
+
+  /* Arrow */
+  .who-card::after {
+    content: "See details \25BC";
+    display: block !important;
+    margin-top: 12px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #00a86b !important;
+    cursor: pointer !important;
+  }
+
+  .who-card.featured::after {
+    color: rgba(0, 255, 160, 0.8) !important;
+  }
+
+  .who-card.mob-expanded::after {
+    content: "Hide details \25B2" !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .who-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
