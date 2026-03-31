@@ -15,6 +15,7 @@ let inputMode = sessionStorage.getItem("taxcalc_input_mode") || "monthly";
 let bandsVisible = false;
 let lastCalc = null;
 let _deletingAccount = false; // prevents onAuthStateChange re-login during account deletion
+let _suppressRecoveryFlow = false; // prevents reset modal from re-opening after password update
 const INITIAL_AUTH_URL_SNAPSHOT = {
   href: window.location.href,
   search: window.location.search || "",
@@ -22,6 +23,10 @@ const INITIAL_AUTH_URL_SNAPSHOT = {
 };
 const INPUT_MODE_KEY = "taxcalc_input_mode";
 const PROFILE_AVATAR_KEY_PREFIX = "taxcalc_avatar_";
+const TAB_SESSION_ID = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+const AUTH_RETURN_CHANNEL = "taxcalc_auth_return_channel";
+const AUTH_RETURN_STORAGE_KEY = "taxcalc_auth_return_ping";
+let authReturnChannel = null;
 
 /* ===========================
    INPUT MODE TOGGLE
@@ -1747,6 +1752,7 @@ function hasRecoveryUrlState() {
 }
 
 function isRecoveryFlowActive() {
+  if (_suppressRecoveryFlow) return false;
   return hasRecoveryUrlState() || getPendingAuthFlow() === "reset";
 }
 
@@ -1760,6 +1766,95 @@ function clearPendingAuthFlow() {
   setPendingAuthFlow("");
 }
 
+function initAuthReturnBridge() {
+  try {
+    if ("BroadcastChannel" in window) {
+      authReturnChannel = new BroadcastChannel(AUTH_RETURN_CHANNEL);
+      authReturnChannel.onmessage = (event) => {
+        handleAuthReturnMessage(event?.data || null);
+      };
+    }
+  } catch (_) {
+    authReturnChannel = null;
+  }
+
+  try {
+    window.addEventListener("storage", (event) => {
+      if (event.key !== AUTH_RETURN_STORAGE_KEY || !event.newValue) return;
+      try {
+        handleAuthReturnMessage(JSON.parse(event.newValue));
+      } catch (_) {}
+    });
+  } catch (_) {}
+}
+
+function broadcastAuthReturnMessage(payload) {
+  const message = {
+    ...(payload || {}),
+    senderTabId: TAB_SESSION_ID,
+    ts: Date.now(),
+  };
+
+  try {
+    authReturnChannel?.postMessage(message);
+  } catch (_) {}
+
+  try {
+    localStorage.setItem(AUTH_RETURN_STORAGE_KEY, JSON.stringify(message));
+    localStorage.removeItem(AUTH_RETURN_STORAGE_KEY);
+  } catch (_) {}
+}
+
+function handleAuthReturnMessage(message) {
+  if (!message || message.senderTabId === TAB_SESSION_ID) return;
+
+  if (message.type === "email_confirmed") {
+    showLandingMode();
+    clearPendingAuthFlow();
+    showAuthOverlay("loginPanel");
+    const loginError = document.getElementById("loginError");
+    if (loginError) {
+      loginError.textContent = "Email verified. Please sign in to continue.";
+      loginError.classList.remove("hidden");
+    }
+    try {
+      window.focus();
+    } catch (_) {}
+    return;
+  }
+
+  if (message.type === "password_reset_completed") {
+    _suppressRecoveryFlow = true;
+    clearPendingAuthFlow();
+    showLandingMode();
+    showAuthOverlay("loginPanel");
+    const loginError = document.getElementById("loginError");
+    if (loginError) {
+      loginError.textContent = "Password updated. Please sign in with your new password.";
+      loginError.classList.remove("hidden");
+    }
+    try {
+      window.focus();
+    } catch (_) {}
+  }
+}
+
+function tryReturnToExistingTab(flowType) {
+  broadcastAuthReturnMessage({ type: flowType });
+
+  try {
+    if (window.opener && !window.opener.closed) {
+      try {
+        window.opener.focus();
+      } catch (_) {}
+      setTimeout(() => {
+        try {
+          window.close();
+        } catch (_) {}
+      }, 150);
+    }
+  } catch (_) {}
+}
 
 function getAppBaseUrl() {
   return `${window.location.origin}${window.location.pathname}`;
@@ -2169,6 +2264,16 @@ async function doLogin() {
     return;
   }
 
+  // User is explicitly doing a normal sign-in, so clear any stale recovery state
+  // left behind by an earlier password-reset flow before authenticating.
+  clearPendingAuthFlow();
+  INITIAL_AUTH_URL_SNAPSHOT.search = "";
+  INITIAL_AUTH_URL_SNAPSHOT.hash = "";
+  INITIAL_AUTH_URL_SNAPSHOT.href = window.location.origin;
+  if (window.history?.replaceState && (window.location.search || window.location.hash)) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
   setAuthLoading("loginBtn", true, "Sign In");
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   setAuthLoading("loginBtn", false, "Sign In");
@@ -2331,6 +2436,7 @@ function handleAuthRouteFromUrl() {
 
   if (authView === "login") {
     showLandingMode();
+    clearPendingAuthFlow();
     showAuthOverlay("loginPanel");
 
     const loginError = document.getElementById("loginError");
@@ -2339,6 +2445,7 @@ function handleAuthRouteFromUrl() {
       loginError.classList.remove("hidden");
     }
 
+    tryReturnToExistingTab("email_confirmed");
     return true;
   }
 
@@ -2445,23 +2552,33 @@ async function completePasswordReset() {
     success.classList.remove("hidden");
   }
 
+  // Clear recovery state BEFORE sign-out so auth callbacks cannot re-open the reset modal.
+  _suppressRecoveryFlow = true;
+  clearPendingAuthFlow();
+  INITIAL_AUTH_URL_SNAPSHOT.search = "";
+  INITIAL_AUTH_URL_SNAPSHOT.hash = "";
+  INITIAL_AUTH_URL_SNAPSHOT.href = window.location.origin;
+
+  if (window.history?.replaceState) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
   try {
     await sb.auth.signOut();
   } catch (_) {}
 
   currentUser = null;
   window._userRole = null;
-  if (window.history?.replaceState) {
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
 
   showLandingMode();
   showAuthOverlay("loginPanel");
-  const loginSuccess = document.getElementById("resetSuccess");
-  if (loginSuccess) {
-    loginSuccess.textContent = "✓ Password updated. Sign in with your new password.";
-    loginSuccess.classList.remove("hidden");
+  const loginError = document.getElementById("loginError");
+  if (loginError) {
+    loginError.textContent = "Password updated. Please sign in with your new password.";
+    loginError.classList.remove("hidden");
   }
+
+  tryReturnToExistingTab("password_reset_completed");
 }
 
 /* ===========================
@@ -2638,6 +2755,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   // Start in landing mode — hide app sections until logged in
+  initAuthReturnBridge();
   showLandingMode();
   const forceLoginRoute = handleAuthRouteFromUrl();
   const recoveryFlowActive = isRecoveryFlowActive();
