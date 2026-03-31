@@ -11,16 +11,19 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 /* ===========================
    STATE
    =========================== */
-let inputMode = "monthly";
+let inputMode = sessionStorage.getItem("taxcalc_input_mode") || "monthly";
 let bandsVisible = false;
 let lastCalc = null;
 let _deletingAccount = false; // prevents onAuthStateChange re-login during account deletion
+const INPUT_MODE_KEY = "taxcalc_input_mode";
+const PROFILE_AVATAR_KEY_PREFIX = "taxcalc_avatar_";
 
 /* ===========================
    INPUT MODE TOGGLE
    =========================== */
 function setInputMode(mode) {
   inputMode = mode;
+  sessionStorage.setItem(INPUT_MODE_KEY, mode);
   document
     .getElementById("monthlyBtn")
     .classList.toggle("active", mode === "monthly");
@@ -65,6 +68,210 @@ function escHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function getAvatarStorageKey(userId) {
+  return `${PROFILE_AVATAR_KEY_PREFIX}${userId}`;
+}
+
+function getStoredProfileAvatar(userId) {
+  if (!userId) return "";
+  try {
+    return localStorage.getItem(getAvatarStorageKey(userId)) || "";
+  } catch {
+    return "";
+  }
+}
+
+function setStoredProfileAvatar(userId, value) {
+  if (!userId) return;
+  try {
+    if (value) localStorage.setItem(getAvatarStorageKey(userId), value);
+    else localStorage.removeItem(getAvatarStorageKey(userId));
+  } catch {}
+}
+
+function getProfileAvatar(user) {
+  if (!user) return "";
+  const metaAvatar = String(user.user_metadata?.avatar_data_url || "");
+  const cachedAvatar = getStoredProfileAvatar(user.id);
+
+  if (metaAvatar && metaAvatar !== cachedAvatar) {
+    setStoredProfileAvatar(user.id, metaAvatar);
+  }
+
+  return metaAvatar || cachedAvatar || "";
+}
+
+function resizeImageFileToDataUrl(file, maxSize = 256, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const longestSide = Math.max(img.width || 1, img.height || 1);
+        const scale = Math.min(1, maxSize / longestSide);
+        const width = Math.max(1, Math.round((img.width || 1) * scale));
+        const height = Math.max(1, Math.round((img.height || 1) * scale));
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Could not prepare image canvas."));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => reject(new Error("Could not load the selected image."));
+      img.src = String(reader.result || "");
+    };
+    reader.onerror = () => reject(new Error("Could not read that image."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function applyAvatarToElement(el, avatarUrl, fallbackText) {
+  if (!el) return;
+  if (avatarUrl) {
+    el.style.backgroundImage = `url(${avatarUrl})`;
+    el.style.backgroundSize = "cover";
+    el.style.backgroundPosition = "center";
+    el.textContent = "";
+    el.classList.add("has-image");
+  } else {
+    el.style.backgroundImage = "";
+    el.textContent = fallbackText || "?";
+    el.classList.remove("has-image");
+  }
+}
+
+function closeMobileNav() {
+  const nav = document.querySelector(".header-nav.mobile-open, #userNav.mobile-open");
+  if (nav) nav.classList.remove("mobile-open");
+  document.getElementById("hamburgerBtn")?.classList.remove("open");
+}
+
+function showProfileSaveStatus(msg, type) {
+  const el = document.getElementById("profileSaveStatus");
+  if (!el) return;
+  el.textContent = msg;
+  el.className = `profile-save-status ${type || ""}`.trim();
+}
+
+function populateProfileSection(user) {
+  if (!user) return;
+  const meta = user.user_metadata || {};
+  const displayName = meta.full_name || user.email || "User";
+  const role = meta.role || "employee";
+  const company = meta.company || "";
+  const initials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join("") || "?";
+  const avatar = getProfileAvatar(user);
+
+  document.getElementById("profileFullName").value = displayName;
+  document.getElementById("profileEmail").value = user.email || "";
+  document.getElementById("profileCompany").value = company;
+  document.getElementById("profileRole").value = ROLE_LABELS[role] || role;
+  document.getElementById("profileNameHeading").textContent = displayName;
+  document.getElementById("profileRoleLine").textContent = `${ROLE_LABELS[role] || role}${company ? ` • ${company}` : ""}`;
+  applyAvatarToElement(document.getElementById("profileAvatarLarge"), avatar, initials);
+  showProfileSaveStatus("", "");
+}
+
+async function saveUserProfile() {
+  if (!currentUser) return;
+  const btn = document.getElementById("saveProfileBtn");
+  const fullName = document.getElementById("profileFullName").value.trim();
+  const company = document.getElementById("profileCompany").value.trim();
+  const existingMeta = currentUser.user_metadata || {};
+
+  btn.disabled = true;
+  btn.textContent = "Saving...";
+  showProfileSaveStatus("", "");
+
+  const { data, error } = await sb.auth.updateUser({
+    data: {
+      ...existingMeta,
+      full_name: fullName || currentUser.email || "User",
+      company,
+    },
+  });
+
+  btn.disabled = false;
+  btn.textContent = "Save profile";
+
+  if (error) {
+    showProfileSaveStatus(error.message, "error");
+    return;
+  }
+
+  currentUser = data?.user || currentUser;
+  updateHeaderUser(currentUser);
+  populateProfileSection(currentUser);
+  showProfileSaveStatus("Profile updated successfully.", "success");
+}
+
+async function handleProfilePictureUpload(event) {
+  if (!currentUser) return;
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    showProfileSaveStatus("Please choose an image file.", "error");
+    return;
+  }
+
+  try {
+    showProfileSaveStatus("Uploading profile picture...", "");
+    const avatar = await resizeImageFileToDataUrl(file);
+    const existingMeta = currentUser.user_metadata || {};
+    const { data, error } = await sb.auth.updateUser({
+      data: {
+        ...existingMeta,
+        avatar_data_url: avatar,
+      },
+    });
+
+    if (error) throw error;
+
+    currentUser = data?.user || currentUser;
+    setStoredProfileAvatar(currentUser.id, avatar);
+    updateHeaderUser(currentUser);
+    populateProfileSection(currentUser);
+    showProfileSaveStatus("Profile picture updated across your account.", "success");
+  } catch (error) {
+    showProfileSaveStatus(error?.message || "Could not upload that image.", "error");
+  }
+}
+
+async function removeProfilePicture() {
+  if (!currentUser) return;
+  try {
+    const existingMeta = currentUser.user_metadata || {};
+    const nextMeta = { ...existingMeta };
+    delete nextMeta.avatar_data_url;
+
+    const { data, error } = await sb.auth.updateUser({ data: nextMeta });
+    if (error) throw error;
+
+    currentUser = data?.user || currentUser;
+    setStoredProfileAvatar(currentUser.id, "");
+    const input = document.getElementById("profilePictureInput");
+    if (input) input.value = "";
+    updateHeaderUser(currentUser);
+    populateProfileSection(currentUser);
+    showProfileSaveStatus("Profile picture removed.", "success");
+  } catch (error) {
+    showProfileSaveStatus(error?.message || "Could not remove profile picture.", "error");
+  }
 }
 
 /* ===========================
@@ -846,18 +1053,61 @@ function recalcFromHistory(id) {
   document.getElementById("transport").value = Math.round(c.transport / 12);
   document.getElementById("other").value = Math.round(c.other_allowances / 12);
   document.getElementById("annualRent").value = Math.round(c.annual_rent || 0);
-  setInputMode("monthly");
+  setInputMode(c.input_mode || "monthly");
   showAppSection("calculator");
   // oninput doesn't fire when setting .value programmatically — trigger manually
   setTimeout(() => calculate(), 50);
 }
 
+function resetTransientUIState() {
+  // Close business dropdown + mobile nav
+  closeBizDropdown();
+  closeMobileNav();
+
+  // Collapse landing guide accordions
+  document.querySelectorAll(".about-guide-card.open").forEach((card) => {
+    card.classList.remove("open");
+    const chevron = card.querySelector(".about-guide-chevron");
+    if (chevron) chevron.textContent = "⌄";
+  });
+
+  // Collapse history cards
+  document.querySelectorAll(".history-card.expanded").forEach((card) => {
+    card.classList.remove("expanded");
+    const btn = card.querySelector(".card-toggle");
+    if (btn) btn.textContent = "▼ Show Details";
+  });
+
+  // Collapse CIT cards
+  document.querySelectorAll(".cit-hcard-detail").forEach((detail) => {
+    detail.classList.add("hidden");
+  });
+  document.querySelectorAll(".cit-card-toggle").forEach((btn) => {
+    btn.textContent = "▼ Show Detail";
+  });
+
+  // Collapse mobile who-cards
+  document.querySelectorAll(".who-card.mob-expanded").forEach((card) => {
+    card.classList.remove("mob-expanded");
+  });
+
+  // Collapse any native details/summary blocks if used in guide/app cards
+  document.querySelectorAll("details[open]").forEach((el) => {
+    el.removeAttribute("open");
+  });
+}
+
 function showAppSection(id) {
   // Remember which tab was active so reload restores it
-  sessionStorage.setItem("taxcalc_active_tab", id);
+  persistActiveTab(id);
+  if (window.location.hash !== `#${id}`) {
+    const nextUrl = new URL(window.location.href);
+    nextUrl.hash = id;
+    history.replaceState(null, "", nextUrl.toString());
+  }
 
-  // Close business dropdown if open
-  closeBizDropdown();
+  // Reset temporary UI states so refresh does not reopen cards/dropdowns
+  resetTransientUIState();
 
   // Show only the target section
   APP_SECTIONS.forEach((s) => {
@@ -906,6 +1156,10 @@ function showAppSection(id) {
       loadBizSummaryHistory();
     }, 50);
   }
+  if (id === "profile") {
+    setTimeout(() => populateProfileSection(currentUser), 20);
+  }
+
   // Re-render Lucide icons for any dynamically shown content
   setTimeout(refreshIcons, 60);
 }
@@ -1454,7 +1708,8 @@ function updateHeaderUser(user) {
     .slice(0, 2)
     .join("");
 
-  document.getElementById("userAvatar").textContent = initials || "?";
+  const avatar = getProfileAvatar(user);
+  applyAvatarToElement(document.getElementById("userAvatar"), avatar, initials || "?");
   // Show name if available, otherwise show email
   const displayName =
     meta.full_name && meta.full_name !== email ? meta.full_name : email;
@@ -1489,6 +1744,7 @@ function updateHeaderUser(user) {
   // Store role for default tab logic
   window._userRole = role;
   updateContextBanner(role);
+  populateProfileSection(user);
 }
 
 function resetHeaderToGuest() {
@@ -1553,12 +1809,46 @@ const APP_SECTIONS = [
   "calculator",
   "ytd",
   "history",
+  "guide",
+  "profile",
   "payroll",
   "cit",
   "clients",
   "vat",
   "bizsummary",
 ];
+const ACTIVE_TAB_KEY = "taxcalc_active_tab";
+
+function persistActiveTab(id) {
+  if (!APP_SECTIONS.includes(id)) return;
+  try {
+    sessionStorage.setItem(ACTIVE_TAB_KEY, id);
+  } catch (_) {}
+  try {
+    localStorage.setItem(ACTIVE_TAB_KEY, id);
+  } catch (_) {}
+}
+
+function clearPersistedActiveTab() {
+  try {
+    sessionStorage.removeItem(ACTIVE_TAB_KEY);
+  } catch (_) {}
+  try {
+    localStorage.removeItem(ACTIVE_TAB_KEY);
+  } catch (_) {}
+}
+
+function getPersistedActiveTab() {
+  try {
+    const sessionTab = sessionStorage.getItem(ACTIVE_TAB_KEY);
+    if (APP_SECTIONS.includes(sessionTab)) return sessionTab;
+  } catch (_) {}
+  try {
+    const localTab = localStorage.getItem(ACTIVE_TAB_KEY);
+    if (APP_SECTIONS.includes(localTab)) return localTab;
+  } catch (_) {}
+  return null;
+}
 
 function showLandingMode() {
   LANDING_SECTIONS.forEach((id) => {
@@ -1579,6 +1869,16 @@ function showLandingMode() {
   if (rcb) rcb.classList.add("hidden");
   resetHeaderToGuest();
   window.scrollTo({ top: 0, behavior: "instant" });
+}
+
+function getPreferredAppTab(fallback = "calculator") {
+  const hashTab = (window.location.hash || "").replace(/^#/, "").trim();
+  if (APP_SECTIONS.includes(hashTab)) return hashTab;
+
+  const storedTab = getPersistedActiveTab();
+  if (APP_SECTIONS.includes(storedTab)) return storedTab;
+
+  return fallback;
 }
 
 function showAppMode(tab) {
@@ -1683,12 +1983,12 @@ async function deleteAccount() {
     // Step 5: sign out to clear local session
     await sb.auth.signOut();
     _deletingAccount = false;
-    sessionStorage.removeItem("taxcalc_active_tab");
+    clearPersistedActiveTab();
     alert("Your account and all data have been permanently deleted.");
   } catch (err) {
     await sb.auth.signOut().catch(() => {});
     _deletingAccount = false;
-    sessionStorage.removeItem("taxcalc_active_tab");
+    clearPersistedActiveTab();
     alert("Your data was deleted and you have been signed out.");
   }
 }
@@ -1863,6 +2163,26 @@ function selectRole(btn) {
   }
 }
 
+function handleAuthRouteFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const authView = params.get("auth");
+
+  if (authView === "login") {
+    showLandingMode();
+    showAuthOverlay("loginPanel");
+
+    const loginError = document.getElementById("loginError");
+    if (loginError) {
+      loginError.textContent = "Email verified. Please sign in to continue.";
+      loginError.classList.remove("hidden");
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 async function doRegister() {
   const name = document.getElementById("regName").value.trim();
   const email = document.getElementById("regEmail").value.trim();
@@ -1885,10 +2205,14 @@ async function doRegister() {
   }
 
   setAuthLoading("registerBtn", true, "Create Account");
+  const redirectUrl = "https://taxcalc-nta-2025.vercel.app/?auth=login";
   const { error } = await sb.auth.signUp({
     email,
     password,
-    options: { data: { full_name: name || email, role, company } },
+    options: {
+      emailRedirectTo: redirectUrl,
+      data: { full_name: name || email, role, company },
+    },
   });
   setAuthLoading("registerBtn", false, "Create Account");
 
@@ -1945,6 +2269,30 @@ async function doLogout() {
    =========================== */
 const SCROLL_KEY = "taxcalc_scroll_pos";
 
+function getCurrentVisibleAppTab() {
+  for (const id of APP_SECTIONS) {
+    const el = document.getElementById(id);
+    if (el && el.style.display !== "none") return id;
+  }
+  return null;
+}
+
+function syncAppTabFromHash() {
+  const hashTab = (window.location.hash || "").replace(/^#/, "").trim();
+  if (!APP_SECTIONS.includes(hashTab)) return;
+
+  const hasSession = !!currentUser;
+  if (!hasSession) {
+    persistActiveTab(hashTab);
+    return;
+  }
+
+  const visibleTab = getCurrentVisibleAppTab();
+  if (visibleTab !== hashTab) {
+    showAppMode(hashTab);
+  }
+}
+
 function saveScrollPos() {
   sessionStorage.setItem(SCROLL_KEY, window.scrollY);
 }
@@ -1969,6 +2317,7 @@ function toggleGuideCard(el) {
 }
 
 function scrollToSection(id) {
+  closeMobileNav();
   const el = document.getElementById(id);
   if (el) {
     el.style.display = "";
@@ -2049,6 +2398,7 @@ function destroyLandingScrollSpy() {
    =========================== */
 window.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("scroll", saveScrollPos, { passive: true });
+  resetTransientUIState();
 
   ["loginEmail", "loginPassword"].forEach((id) => {
     document.getElementById(id)?.addEventListener("keydown", (e) => {
@@ -2066,6 +2416,20 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Start in landing mode — hide app sections until logged in
   showLandingMode();
+  const forceLoginRoute = handleAuthRouteFromUrl();
+  syncAppTabFromHash();
+  setInputMode(inputMode);
+
+  window.addEventListener("hashchange", syncAppTabFromHash);
+  window.addEventListener("pageshow", () => {
+    const visibleTab = getCurrentVisibleAppTab();
+    if (visibleTab) persistActiveTab(visibleTab);
+    syncAppTabFromHash();
+  });
+  window.addEventListener("pagehide", () => {
+    const visibleTab = getCurrentVisibleAppTab();
+    if (visibleTab) persistActiveTab(visibleTab);
+  });
 
   // Seed demo card with placeholder values so results show on load
   const demoBasicEl = document.getElementById("demoBasic");
@@ -2085,8 +2449,8 @@ window.addEventListener("DOMContentLoaded", async () => {
         const el = document.getElementById(id);
         return el && el.style.display !== "none";
       });
-      if (onLanding) {
-        showAppMode();
+      if (onLanding && !forceLoginRoute) {
+        showAppMode(getPreferredAppTab());
         loadHistory();
       }
     }
@@ -2100,13 +2464,18 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (session?.user) {
     currentUser = session.user;
     updateHeaderUser(currentUser);
-    hideAuthOverlay();
-    // Restore last active tab — default to calculator on first login
-    const lastTab =
-      sessionStorage.getItem("taxcalc_active_tab") || "calculator";
-    showAppMode(lastTab);
-    loadHistory();
-    restoreScrollPos();
+
+    if (forceLoginRoute) {
+      showLandingMode();
+      showAuthOverlay("loginPanel");
+    } else {
+      hideAuthOverlay();
+      // Restore last active tab — default to calculator on first login
+      const lastTab = getPreferredAppTab("calculator");
+      showAppMode(lastTab);
+      loadHistory();
+      restoreScrollPos();
+    }
   }
   // No session = stay in landing mode
 });

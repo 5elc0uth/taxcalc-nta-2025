@@ -318,6 +318,18 @@
           >
           <a
             class="nav-link light user-nav-link"
+            data-section="guide"
+            onclick="showAppSection('guide')"
+            >Guide</a
+          >
+          <a
+            class="nav-link light user-nav-link"
+            data-section="profile"
+            onclick="showAppSection('profile')"
+            >Profile</a
+          >
+          <a
+            class="nav-link light user-nav-link"
             data-section="payroll"
             onclick="showAppSection('payroll')"
             >Payroll</a
@@ -392,7 +404,7 @@
           </div>
 
           <div class="user-info">
-            <span class="user-avatar" id="userAvatar">?</span>
+            <div class="user-avatar" id="userAvatar">?</div>
             <div class="user-info-text">
               <span class="user-email" id="userEmail"></span>
               <span
@@ -405,13 +417,6 @@
           </div>
           <div class="user-menu-wrap">
             <button class="logout-btn" onclick="doLogout()">Sign Out</button>
-            <button
-              class="delete-account-btn"
-              onclick="deleteAccount()"
-              title="Delete my account"
-            >
-              <i data-lucide="trash-2"></i>
-            </button>
           </div>
         </div>
       </div>
@@ -1576,6 +1581,192 @@
             </p>
           </div>
           <div class="history-grid" id="historyGrid"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="guide-section" id="guide" style="display: none">
+      <div class="history-inner guide-inner">
+        <div class="history-header">
+          <div>
+            <h2 class="history-title">How TaxCalc Works</h2>
+            <p class="history-sub">
+              Separate from the calculator so users can learn the flow without leaving their work.
+            </p>
+          </div>
+        </div>
+
+        <div class="guide-top-grid">
+          <div class="guide-page-card">
+            <div class="guide-page-badge">Page 1</div>
+            <h3>Calculator</h3>
+            <p>Use this page strictly for entering figures, switching between monthly and annual mode, and reviewing the live PAYE output.</p>
+            <ul>
+              <li>Enter basic, housing, transport, and other allowances</li>
+              <li>Switch between monthly and annual input mode</li>
+              <li>Review deductions, PAYE, take-home pay, and band workings</li>
+            </ul>
+            <button class="btn-refresh" onclick="showAppSection('calculator')">Open Calculator</button>
+          </div>
+          <div class="guide-page-card">
+            <div class="guide-page-badge">Page 2</div>
+            <h3>Walkthrough</h3>
+            <p>This page explains the logic behind the output so the user does not need to scroll through instructional content while calculating.</p>
+            <ul>
+              <li>Understand how chargeable income is derived</li>
+              <li>See what each deduction means</li>
+              <li>Know when to use YTD, History, Payroll, CIT, VAT, and Tax Summary</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="about-guide-grid guide-app-grid">
+          <div class="about-guide-card open">
+            <div class="about-guide-header" onclick="toggleGuideCard(this)">
+              <span class="about-guide-icon"><i data-lucide="calculator"></i></span>
+              <div>
+                <h3>PAYE Calculator</h3>
+                <span class="about-guide-tag">All Users</span>
+              </div>
+              <span class="about-guide-chevron">⌃</span>
+            </div>
+            <div class="about-guide-teaser">
+              Compute exact take-home pay under NTA 2025 with full deduction and tax-band visibility.
+            </div>
+            <div class="about-guide-body">
+              <div class="about-guide-steps">
+                <div class="about-step"><span class="about-step-n">1</span><span>Pick monthly or annual mode.</span></div>
+                <div class="about-step"><span class="about-step-n">2</span><span>Enter salary components and annual rent where relevant.</span></div>
+                <div class="about-step"><span class="about-step-n">3</span><span>Review NTA 2025 output, PITA comparison, and tax-band workings.</span></div>
+                <div class="about-step"><span class="about-step-n">4</span><span>Save the result or export a clean report for sharing.</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-guide-card">
+            <div class="about-guide-header" onclick="toggleGuideCard(this)">
+              <span class="about-guide-icon"><i data-lucide="calendar"></i></span>
+              <div>
+                <h3>YTD Tracker</h3>
+                <span class="about-guide-tag">All Users</span>
+              </div>
+              <span class="about-guide-chevron">⌄</span>
+            </div>
+            <div class="about-guide-teaser">Track what has already been paid this year and what is still outstanding.</div>
+            <div class="about-guide-body">
+              <div class="about-guide-steps">
+                <div class="about-step"><span class="about-step-n">1</span><span>Open YTD after running a salary calculation.</span></div>
+                <div class="about-step"><span class="about-step-n">2</span><span>Choose how many months have elapsed.</span></div>
+                <div class="about-step"><span class="about-step-n">3</span><span>Review YTD PAYE, chargeable income, and remaining months.</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-guide-card">
+            <div class="about-guide-header" onclick="toggleGuideCard(this)">
+              <span class="about-guide-icon"><i data-lucide="history"></i></span>
+              <div>
+                <h3>History & Exports</h3>
+                <span class="about-guide-tag">All Users</span>
+              </div>
+              <span class="about-guide-chevron">⌄</span>
+            </div>
+            <div class="about-guide-teaser">Keep prior runs, reopen them fast, and export clean records.</div>
+            <div class="about-guide-body">
+              <div class="about-guide-steps">
+                <div class="about-step"><span class="about-step-n">1</span><span>Save a completed calculation.</span></div>
+                <div class="about-step"><span class="about-step-n">2</span><span>Search or reopen calculations from History.</span></div>
+                <div class="about-step"><span class="about-step-n">3</span><span>Export PDF or Excel output when needed.</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-guide-card">
+            <div class="about-guide-header" onclick="toggleGuideCard(this)">
+              <span class="about-guide-icon"><i data-lucide="briefcase-business"></i></span>
+              <div>
+                <h3>Business Tools</h3>
+                <span class="about-guide-tag">Business Roles</span>
+              </div>
+              <span class="about-guide-chevron">⌄</span>
+            </div>
+            <div class="about-guide-teaser">Payroll, CIT, VAT, Tax Summary, and client profiles are grouped under business workflows.</div>
+            <div class="about-guide-body">
+              <div class="about-guide-steps">
+                <div class="about-step"><span class="about-step-n">1</span><span>Use Payroll for multi-employee monthly runs.</span></div>
+                <div class="about-step"><span class="about-step-n">2</span><span>Use CIT and VAT for company tax computations.</span></div>
+                <div class="about-step"><span class="about-step-n">3</span><span>Use Tax Summary for a combined management-level report.</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="profile-section" id="profile" style="display: none">
+      <div class="history-inner profile-inner">
+        <div class="history-header">
+          <div>
+            <h2 class="history-title">User Profile</h2>
+            <p class="history-sub">Manage your account details, display picture, and account actions.</p>
+          </div>
+        </div>
+
+        <div class="profile-grid">
+          <div class="profile-card profile-card-main">
+            <div class="profile-card-header">
+              <div class="profile-avatar-large" id="profileAvatarLarge">?</div>
+              <div>
+                <h3 id="profileNameHeading">Your profile</h3>
+                <p id="profileRoleLine">Signed in user</p>
+              </div>
+            </div>
+
+            <div class="profile-upload-row">
+              <label class="profile-upload-btn" for="profilePictureInput">
+                <i data-lucide="image-plus"></i>
+                <span>Upload profile picture</span>
+              </label>
+              <input type="file" id="profilePictureInput" accept="image/*" onchange="handleProfilePictureUpload(event)" />
+              <button class="btn-refresh profile-secondary-btn" onclick="removeProfilePicture()">
+                Remove picture
+              </button>
+            </div>
+
+            <div class="profile-form-grid">
+              <div class="profile-field">
+                <label for="profileFullName">Full name</label>
+                <input id="profileFullName" type="text" placeholder="Your full name" />
+              </div>
+              <div class="profile-field">
+                <label for="profileEmail">Email</label>
+                <input id="profileEmail" type="email" readonly />
+              </div>
+              <div class="profile-field">
+                <label for="profileCompany">Company</label>
+                <input id="profileCompany" type="text" placeholder="Company or organisation" />
+              </div>
+              <div class="profile-field">
+                <label for="profileRole">Role</label>
+                <input id="profileRole" type="text" readonly />
+              </div>
+            </div>
+
+            <div class="profile-actions-row">
+              <button class="btn-refresh" id="saveProfileBtn" onclick="saveUserProfile()">Save profile</button>
+              <span class="profile-save-status" id="profileSaveStatus"></span>
+            </div>
+          </div>
+
+          <div class="profile-card profile-card-side">
+            <h3>Account actions</h3>
+            <p class="profile-side-copy">Keep account-level actions inside the profile area so they are not mixed with primary navigation.</p>
+            <button class="logout-btn profile-logout-btn" onclick="doLogout()">Sign Out</button>
+            <button class="delete-account-btn profile-delete-btn" onclick="deleteAccount()">
+              <i data-lucide="trash-2"></i>
+              Delete account
+            </button>
+          </div>
         </div>
       </div>
     </section>
