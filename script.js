@@ -15,6 +15,11 @@ let inputMode = sessionStorage.getItem("taxcalc_input_mode") || "monthly";
 let bandsVisible = false;
 let lastCalc = null;
 let _deletingAccount = false; // prevents onAuthStateChange re-login during account deletion
+const INITIAL_AUTH_URL_SNAPSHOT = {
+  href: window.location.href,
+  search: window.location.search || "",
+  hash: window.location.hash || "",
+};
 const INPUT_MODE_KEY = "taxcalc_input_mode";
 const PROFILE_AVATAR_KEY_PREFIX = "taxcalc_avatar_";
 
@@ -1100,7 +1105,7 @@ function resetTransientUIState() {
 function showAppSection(id) {
   // Remember which tab was active so reload restores it
   persistActiveTab(id);
-  if (window.location.hash !== `#${id}`) {
+  if (!isRecoveryFlowActive() && window.location.hash !== `#${id}`) {
     const nextUrl = new URL(window.location.href);
     nextUrl.hash = id;
     history.replaceState(null, "", nextUrl.toString());
@@ -1656,7 +1661,7 @@ function showPanel(panelId) {
     .querySelectorAll(".auth-panel")
     .forEach((p) => p.classList.add("hidden"));
   document.getElementById(panelId).classList.remove("hidden");
-  ["loginError", "registerError", "resetError", "resetSuccess"].forEach(
+  ["loginError", "registerError", "resetError", "resetSuccess", "resetConfirmError", "resetConfirmSuccess"].forEach(
     (id) => {
       const el = document.getElementById(id);
       if (el) {
@@ -1674,6 +1679,157 @@ function showAuthOverlay(panelId) {
 
 function hideAuthOverlay() {
   document.getElementById("authOverlay").style.display = "none";
+}
+
+const AUTH_FLOW_STORAGE_KEY = "taxcalc_auth_flow";
+
+function setPendingAuthFlow(mode) {
+  try {
+    if (mode) {
+      localStorage.setItem(AUTH_FLOW_STORAGE_KEY, mode);
+      sessionStorage.setItem(AUTH_FLOW_STORAGE_KEY, mode);
+    } else {
+      localStorage.removeItem(AUTH_FLOW_STORAGE_KEY);
+      sessionStorage.removeItem(AUTH_FLOW_STORAGE_KEY);
+    }
+  } catch (_) {}
+}
+
+function getPendingAuthFlow() {
+  try {
+    return (
+      sessionStorage.getItem(AUTH_FLOW_STORAGE_KEY) ||
+      localStorage.getItem(AUTH_FLOW_STORAGE_KEY) ||
+      ""
+    );
+  } catch (_) {
+    return "";
+  }
+}
+
+function urlStateLooksLikeRecovery(searchValue, hashValue) {
+  const searchParams = new URLSearchParams(searchValue || "");
+  const rawHash = (hashValue || "").replace(/^#/, "");
+  const hashParams = new URLSearchParams(rawHash);
+  const rawHashLower = rawHash.toLowerCase();
+
+  return (
+    searchParams.get("auth") === "reset" ||
+    hashParams.get("auth") === "reset" ||
+    searchParams.get("type") === "recovery" ||
+    hashParams.get("type") === "recovery" ||
+    hashParams.get("flow") === "recovery" ||
+    rawHashLower.includes("type=recovery") ||
+    rawHashLower.includes("/auth/v1/verify") ||
+    hashParams.has("access_token") ||
+    hashParams.has("refresh_token") ||
+    searchParams.has("token_hash") ||
+    hashParams.has("token_hash")
+  );
+}
+
+function persistRecoveryIntentFromInitialUrl() {
+  try {
+    if (urlStateLooksLikeRecovery(INITIAL_AUTH_URL_SNAPSHOT.search, INITIAL_AUTH_URL_SNAPSHOT.hash)) {
+      sessionStorage.setItem(AUTH_FLOW_STORAGE_KEY, "reset");
+      localStorage.setItem(AUTH_FLOW_STORAGE_KEY, "reset");
+    }
+  } catch (_) {}
+}
+
+persistRecoveryIntentFromInitialUrl();
+
+function hasRecoveryUrlState() {
+  return (
+    urlStateLooksLikeRecovery(window.location.search || "", window.location.hash || "") ||
+    urlStateLooksLikeRecovery(INITIAL_AUTH_URL_SNAPSHOT.search, INITIAL_AUTH_URL_SNAPSHOT.hash)
+  );
+}
+
+function isRecoveryFlowActive() {
+  return hasRecoveryUrlState() || getPendingAuthFlow() === "reset";
+}
+
+function activateRecoveryFlow() {
+  setPendingAuthFlow("reset");
+  showLandingMode();
+  showAuthOverlay("resetConfirmPanel");
+}
+
+function clearPendingAuthFlow() {
+  setPendingAuthFlow("");
+}
+
+
+function getAppBaseUrl() {
+  return `${window.location.origin}${window.location.pathname}`;
+}
+
+function buildAuthRedirect(mode) {
+  return `${getAppBaseUrl()}?auth=${encodeURIComponent(mode)}`;
+}
+
+function getAuthIntentFromUrl() {
+  const searchParams = new URLSearchParams(window.location.search || "");
+  const rawHash = (window.location.hash || "").replace(/^#/, "");
+  const hashParams = new URLSearchParams(rawHash);
+
+  return {
+    authView: searchParams.get("auth") || hashParams.get("auth") || "",
+    error: searchParams.get("error") || hashParams.get("error") || "",
+    errorCode:
+      searchParams.get("error_code") || hashParams.get("error_code") || "",
+    errorDescription:
+      searchParams.get("error_description") ||
+      hashParams.get("error_description") ||
+      "",
+  };
+}
+
+function isForcedAuthRoute() {
+  const { authView } = getAuthIntentFromUrl();
+  return authView === "login" || authView === "reset";
+}
+
+function handleForcedAuthRoute() {
+  const { authView, error, errorCode, errorDescription } = getAuthIntentFromUrl();
+  if (authView !== "login" && authView !== "reset") return false;
+
+  showLandingMode();
+
+  const decodedMessage = (() => {
+    try {
+      return decodeURIComponent((errorDescription || "").replace(/\+/g, " ")).trim();
+    } catch (_) {
+      return (errorDescription || "").replace(/\+/g, " ").trim();
+    }
+  })();
+
+  if (authView === "reset") {
+    setPendingAuthFlow("reset");
+    showAuthOverlay("resetConfirmPanel");
+    if (error || errorCode || decodedMessage) {
+      showAuthError(
+        "resetConfirmError",
+        decodedMessage ||
+          "This password reset link is invalid or has expired. Please request a new one.",
+      );
+    }
+    return true;
+  }
+
+  clearPendingAuthFlow();
+  showAuthOverlay("loginPanel");
+
+  if (error || errorCode || decodedMessage) {
+    showAuthError(
+      "loginError",
+      decodedMessage ||
+        "This email link is invalid or has expired. Please sign in again.",
+    );
+  }
+
+  return true;
 }
 
 function setAuthLoading(btnId, loading, defaultText) {
@@ -1882,6 +2038,11 @@ function getPreferredAppTab(fallback = "calculator") {
 }
 
 function showAppMode(tab) {
+  if (isRecoveryFlowActive()) {
+    activateRecoveryFlow();
+    return;
+  }
+
   LANDING_SECTIONS.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.style.display = "none";
@@ -1935,6 +2096,7 @@ async function deleteAccount() {
   _deletingAccount = true;
 
   // Clear UI immediately — don't wait for Supabase
+  clearPendingAuthFlow();
   currentUser = null;
   window._userRole = null;
   document.getElementById("historyGrid").innerHTML = "";
@@ -2234,16 +2396,72 @@ async function doReset() {
   }
 
   setAuthLoading("resetBtn", true, "Send Reset Link");
-  const { error } = await sb.auth.resetPasswordForEmail(email);
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: buildAuthRedirect("reset"),
+  });
   setAuthLoading("resetBtn", false, "Send Reset Link");
 
   if (error) {
     showAuthError("resetError", error.message);
     return;
   }
+  setPendingAuthFlow("reset");
   const success = document.getElementById("resetSuccess");
   success.textContent = "✓ Reset link sent! Check your email.";
   success.classList.remove("hidden");
+}
+
+async function completePasswordReset() {
+  const newPassword = document.getElementById("resetNewPassword")?.value || "";
+  const confirmPassword = document.getElementById("resetConfirmPassword")?.value || "";
+
+  if (!newPassword) {
+    showAuthError("resetConfirmError", "Please enter your new password.");
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    showAuthError("resetConfirmError", "Password must be at least 6 characters.");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    showAuthError("resetConfirmError", "Passwords do not match.");
+    return;
+  }
+
+  setAuthLoading("resetConfirmBtn", true, "Update Password");
+  const { error } = await sb.auth.updateUser({ password: newPassword });
+  setAuthLoading("resetConfirmBtn", false, "Update Password");
+
+  if (error) {
+    showAuthError("resetConfirmError", error.message);
+    return;
+  }
+
+  const success = document.getElementById("resetConfirmSuccess");
+  if (success) {
+    success.textContent = "✓ Password updated. Please sign in with your new password.";
+    success.classList.remove("hidden");
+  }
+
+  try {
+    await sb.auth.signOut();
+  } catch (_) {}
+
+  currentUser = null;
+  window._userRole = null;
+  if (window.history?.replaceState) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  showLandingMode();
+  showAuthOverlay("loginPanel");
+  const loginSuccess = document.getElementById("resetSuccess");
+  if (loginSuccess) {
+    loginSuccess.textContent = "✓ Password updated. Sign in with your new password.";
+    loginSuccess.classList.remove("hidden");
+  }
 }
 
 /* ===========================
@@ -2413,23 +2631,35 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("resetEmail")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") doReset();
   });
+  ["resetNewPassword", "resetConfirmPassword"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") completePasswordReset();
+    });
+  });
 
   // Start in landing mode — hide app sections until logged in
   showLandingMode();
   const forceLoginRoute = handleAuthRouteFromUrl();
-  syncAppTabFromHash();
+  const recoveryFlowActive = isRecoveryFlowActive();
+  if (recoveryFlowActive) {
+    activateRecoveryFlow();
+  } else {
+    syncAppTabFromHash();
+  }
   setInputMode(inputMode);
 
-  window.addEventListener("hashchange", syncAppTabFromHash);
-  window.addEventListener("pageshow", () => {
-    const visibleTab = getCurrentVisibleAppTab();
-    if (visibleTab) persistActiveTab(visibleTab);
-    syncAppTabFromHash();
-  });
-  window.addEventListener("pagehide", () => {
-    const visibleTab = getCurrentVisibleAppTab();
-    if (visibleTab) persistActiveTab(visibleTab);
-  });
+  if (!recoveryFlowActive) {
+    window.addEventListener("hashchange", syncAppTabFromHash);
+    window.addEventListener("pageshow", () => {
+      const visibleTab = getCurrentVisibleAppTab();
+      if (visibleTab) persistActiveTab(visibleTab);
+      syncAppTabFromHash();
+    });
+    window.addEventListener("pagehide", () => {
+      const visibleTab = getCurrentVisibleAppTab();
+      if (visibleTab) persistActiveTab(visibleTab);
+    });
+  }
 
   // Seed demo card with placeholder values so results show on load
   const demoBasicEl = document.getElementById("demoBasic");
@@ -2438,24 +2668,49 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (demoAlloEl && !demoAlloEl.value) demoAlloEl.value = 400000;
   runDemo();
 
+  const forcedAuthRoute = handleForcedAuthRoute();
+
   sb.auth.onAuthStateChange((event, session) => {
+    if (event === "PASSWORD_RECOVERY") {
+      activateRecoveryFlow();
+      return;
+    }
+
+    if (isForcedAuthRoute()) {
+      handleForcedAuthRoute();
+      return;
+    }
+
+    if (isRecoveryFlowActive()) {
+      activateRecoveryFlow();
+      return;
+    }
+
     if (event === "SIGNED_IN" && session?.user && !_deletingAccount) {
+      // If this SIGNED_IN is part of a password recovery flow, don't enter app mode.
+      // Some Supabase versions fire SIGNED_IN before PASSWORD_RECOVERY on PKCE flows.
+      if (isRecoveryFlowActive()) {
+        activateRecoveryFlow();
+        return;
+      }
       currentUser = session.user;
-      updateHeaderUser(currentUser); // sets window._userRole from metadata
+      updateHeaderUser(currentUser);
       hideAuthOverlay();
-      // Only trigger app mode if we're currently in landing mode
-      // Check if a landing section is visible — if so, we're on the landing page
       const onLanding = LANDING_SECTIONS.some((id) => {
         const el = document.getElementById(id);
         return el && el.style.display !== "none";
       });
-      if (onLanding && !forceLoginRoute) {
-        showAppMode(getPreferredAppTab());
+      if (onLanding) {
+        showAppMode();
         loadHistory();
       }
     }
     // SIGNED_OUT is handled entirely by doLogout() — ignore it here
   });
+
+  if (forcedAuthRoute) {
+    return;
+  }
 
   // Check existing session
   const {
@@ -2467,7 +2722,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     if (forceLoginRoute) {
       showLandingMode();
+      clearPendingAuthFlow();
       showAuthOverlay("loginPanel");
+    } else if (isRecoveryFlowActive()) {
+      activateRecoveryFlow();
     } else {
       hideAuthOverlay();
       // Restore last active tab — default to calculator on first login

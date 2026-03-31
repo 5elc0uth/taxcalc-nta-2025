@@ -209,6 +209,46 @@
           </div>
         </div>
 
+
+
+        <!-- RESET CONFIRM -->
+        <div class="auth-panel hidden" id="resetConfirmPanel">
+          <h2 class="auth-title">Set a new password</h2>
+          <p class="auth-sub">Enter your new password below to complete your reset.</p>
+          <div class="auth-field">
+            <label>New Password</label>
+            <input
+              type="password"
+              id="resetNewPassword"
+              placeholder="Enter new password"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="auth-field">
+            <label>Confirm New Password</label>
+            <input
+              type="password"
+              id="resetConfirmPassword"
+              placeholder="Confirm new password"
+              autocomplete="new-password"
+            />
+          </div>
+          <p class="auth-error hidden" id="resetConfirmError"></p>
+          <p class="auth-success-msg hidden" id="resetConfirmSuccess"></p>
+          <button
+            class="auth-btn primary"
+            id="resetConfirmBtn"
+            onclick="completePasswordReset()"
+          >
+            Update Password
+          </button>
+          <div class="auth-links">
+            <button class="auth-link" onclick="showPanel('loginPanel')">
+              ← Back to sign in
+            </button>
+          </div>
+        </div>
+
         <!-- SUCCESS -->
         <div class="auth-panel hidden" id="successPanel">
           <div class="auth-success-icon">✓</div>
