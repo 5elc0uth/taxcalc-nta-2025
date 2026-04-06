@@ -142,7 +142,8 @@ function resizeImageFileToDataUrl(file, maxSize = 256, quality = 0.82) {
         ctx.drawImage(img, 0, 0, width, height);
         resolve(canvas.toDataURL("image/jpeg", quality));
       };
-      img.onerror = () => reject(new Error("Could not load the selected image."));
+      img.onerror = () =>
+        reject(new Error("Could not load the selected image."));
       img.src = String(reader.result || "");
     };
     reader.onerror = () => reject(new Error("Could not read that image."));
@@ -170,7 +171,9 @@ function forEachDuplicateId(id, callback) {
 }
 
 function closeMobileNav() {
-  const nav = document.querySelector(".header-nav.mobile-open, #userNav.mobile-open");
+  const nav = document.querySelector(
+    ".header-nav.mobile-open, #userNav.mobile-open",
+  );
   if (nav) nav.classList.remove("mobile-open");
   document.getElementById("hamburgerBtn")?.classList.remove("open");
 }
@@ -188,12 +191,13 @@ function populateProfileSection(user) {
   const displayName = meta.full_name || user.email || "User";
   const role = meta.role || "employee";
   const company = meta.company || "";
-  const initials = displayName
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase())
-    .slice(0, 2)
-    .join("") || "?";
+  const initials =
+    displayName
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join("") || "?";
   const avatar = getProfileAvatar(user);
 
   document.getElementById("profileFullName").value = displayName;
@@ -201,8 +205,13 @@ function populateProfileSection(user) {
   document.getElementById("profileCompany").value = company;
   document.getElementById("profileRole").value = ROLE_LABELS[role] || role;
   document.getElementById("profileNameHeading").textContent = displayName;
-  document.getElementById("profileRoleLine").textContent = `${ROLE_LABELS[role] || role}${company ? ` • ${company}` : ""}`;
-  applyAvatarToElement(document.getElementById("profileAvatarLarge"), avatar, initials);
+  document.getElementById("profileRoleLine").textContent =
+    `${ROLE_LABELS[role] || role}${company ? ` • ${company}` : ""}`;
+  applyAvatarToElement(
+    document.getElementById("profileAvatarLarge"),
+    avatar,
+    initials,
+  );
   showProfileSaveStatus("", "");
 }
 
@@ -265,9 +274,15 @@ async function handleProfilePictureUpload(event) {
     setStoredProfileAvatar(currentUser.id, avatar);
     updateHeaderUser(currentUser);
     populateProfileSection(currentUser);
-    showProfileSaveStatus("Profile picture updated across your account.", "success");
+    showProfileSaveStatus(
+      "Profile picture updated across your account.",
+      "success",
+    );
   } catch (error) {
-    showProfileSaveStatus(error?.message || "Could not upload that image.", "error");
+    showProfileSaveStatus(
+      error?.message || "Could not upload that image.",
+      "error",
+    );
   }
 }
 
@@ -1688,15 +1703,20 @@ function showPanel(panelId) {
     .querySelectorAll(".auth-panel")
     .forEach((p) => p.classList.add("hidden"));
   document.getElementById(panelId).classList.remove("hidden");
-  ["loginError", "registerError", "resetError", "resetSuccess", "resetConfirmError", "resetConfirmSuccess"].forEach(
-    (id) => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.textContent = "";
-        el.classList.add("hidden");
-      }
-    },
-  );
+  [
+    "loginError",
+    "registerError",
+    "resetError",
+    "resetSuccess",
+    "resetConfirmError",
+    "resetConfirmSuccess",
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = "";
+      el.classList.add("hidden");
+    }
+  });
 }
 
 function showAuthOverlay(panelId) {
@@ -1757,7 +1777,12 @@ function urlStateLooksLikeRecovery(searchValue, hashValue) {
 
 function persistRecoveryIntentFromInitialUrl() {
   try {
-    if (urlStateLooksLikeRecovery(INITIAL_AUTH_URL_SNAPSHOT.search, INITIAL_AUTH_URL_SNAPSHOT.hash)) {
+    if (
+      urlStateLooksLikeRecovery(
+        INITIAL_AUTH_URL_SNAPSHOT.search,
+        INITIAL_AUTH_URL_SNAPSHOT.hash,
+      )
+    ) {
       sessionStorage.setItem(AUTH_FLOW_STORAGE_KEY, "reset");
       localStorage.setItem(AUTH_FLOW_STORAGE_KEY, "reset");
     }
@@ -1768,8 +1793,14 @@ persistRecoveryIntentFromInitialUrl();
 
 function hasRecoveryUrlState() {
   return (
-    urlStateLooksLikeRecovery(window.location.search || "", window.location.hash || "") ||
-    urlStateLooksLikeRecovery(INITIAL_AUTH_URL_SNAPSHOT.search, INITIAL_AUTH_URL_SNAPSHOT.hash)
+    urlStateLooksLikeRecovery(
+      window.location.search || "",
+      window.location.hash || "",
+    ) ||
+    urlStateLooksLikeRecovery(
+      INITIAL_AUTH_URL_SNAPSHOT.search,
+      INITIAL_AUTH_URL_SNAPSHOT.hash,
+    )
   );
 }
 
@@ -1852,7 +1883,8 @@ function handleAuthReturnMessage(message) {
     showAuthOverlay("loginPanel");
     const loginError = document.getElementById("loginError");
     if (loginError) {
-      loginError.textContent = "Password updated. Please sign in with your new password.";
+      loginError.textContent =
+        "Password updated. Please sign in with your new password.";
       loginError.classList.remove("hidden");
     }
     try {
@@ -1909,14 +1941,17 @@ function isForcedAuthRoute() {
 }
 
 function handleForcedAuthRoute() {
-  const { authView, error, errorCode, errorDescription } = getAuthIntentFromUrl();
+  const { authView, error, errorCode, errorDescription } =
+    getAuthIntentFromUrl();
   if (authView !== "login" && authView !== "reset") return false;
 
   showLandingMode();
 
   const decodedMessage = (() => {
     try {
-      return decodeURIComponent((errorDescription || "").replace(/\+/g, " ")).trim();
+      return decodeURIComponent(
+        (errorDescription || "").replace(/\+/g, " "),
+      ).trim();
     } catch (_) {
       return (errorDescription || "").replace(/\+/g, " ").trim();
     }
@@ -1999,6 +2034,9 @@ function updateHeaderUser(user) {
   forEachDuplicateId("userNav", (el) => {
     el.classList.remove("hidden");
   });
+  closeMobileNav();
+  document.getElementById("guestNav")?.classList.remove("mobile-open");
+  document.getElementById("userNav")?.classList.remove("mobile-open");
 
   // Show role badge next to avatar
   forEachDuplicateId("userRoleBadge", (badge) => {
@@ -2036,6 +2074,9 @@ function resetHeaderToGuest() {
   forEachDuplicateId("userNav", (el) => {
     el.classList.add("hidden");
   });
+  closeMobileNav();
+  document.getElementById("guestNav")?.classList.remove("mobile-open");
+  document.getElementById("userNav")?.classList.remove("mobile-open");
 }
 
 /* ===========================
@@ -2305,7 +2346,10 @@ async function doLogin() {
   INITIAL_AUTH_URL_SNAPSHOT.search = "";
   INITIAL_AUTH_URL_SNAPSHOT.hash = "";
   INITIAL_AUTH_URL_SNAPSHOT.href = window.location.origin;
-  if (window.history?.replaceState && (window.location.search || window.location.hash)) {
+  if (
+    window.history?.replaceState &&
+    (window.location.search || window.location.hash)
+  ) {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 
@@ -2555,7 +2599,8 @@ async function doReset() {
 
 async function completePasswordReset() {
   const newPassword = document.getElementById("resetNewPassword")?.value || "";
-  const confirmPassword = document.getElementById("resetConfirmPassword")?.value || "";
+  const confirmPassword =
+    document.getElementById("resetConfirmPassword")?.value || "";
 
   if (!newPassword) {
     showAuthError("resetConfirmError", "Please enter your new password.");
@@ -2563,7 +2608,10 @@ async function completePasswordReset() {
   }
 
   if (newPassword.length < 6) {
-    showAuthError("resetConfirmError", "Password must be at least 6 characters.");
+    showAuthError(
+      "resetConfirmError",
+      "Password must be at least 6 characters.",
+    );
     return;
   }
 
@@ -2583,7 +2631,8 @@ async function completePasswordReset() {
 
   const success = document.getElementById("resetConfirmSuccess");
   if (success) {
-    success.textContent = "✓ Password updated. Please sign in with your new password.";
+    success.textContent =
+      "✓ Password updated. Please sign in with your new password.";
     success.classList.remove("hidden");
   }
 
@@ -2609,7 +2658,8 @@ async function completePasswordReset() {
   showAuthOverlay("loginPanel");
   const loginError = document.getElementById("loginError");
   if (loginError) {
-    loginError.textContent = "Password updated. Please sign in with your new password.";
+    loginError.textContent =
+      "Password updated. Please sign in with your new password.";
     loginError.classList.remove("hidden");
   }
 
