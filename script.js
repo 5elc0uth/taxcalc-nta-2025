@@ -103,11 +103,16 @@ function setStoredProfileAvatar(userId, value) {
 
 function getProfileAvatar(user) {
   if (!user) return "";
-  const metaAvatar = String(user.user_metadata?.avatar_data_url || "");
+  const rawMetaAvatar = user.user_metadata?.avatar_data_url;
+  const metaAvatar = typeof rawMetaAvatar === "string" ? rawMetaAvatar.trim() : "";
   const cachedAvatar = getStoredProfileAvatar(user.id);
 
   if (metaAvatar && metaAvatar !== cachedAvatar) {
     setStoredProfileAvatar(user.id, metaAvatar);
+  }
+
+  if (!metaAvatar && cachedAvatar) {
+    setStoredProfileAvatar(user.id, "");
   }
 
   return metaAvatar || cachedAvatar || "";
@@ -158,6 +163,10 @@ function applyAvatarToElement(el, avatarUrl, fallbackText) {
     el.textContent = fallbackText || "?";
     el.classList.remove("has-image");
   }
+}
+
+function forEachDuplicateId(id, callback) {
+  document.querySelectorAll(`[id="${id}"]`).forEach((el) => callback(el));
 }
 
 function closeMobileNav() {
@@ -266,13 +275,23 @@ async function removeProfilePicture() {
   if (!currentUser) return;
   try {
     const existingMeta = currentUser.user_metadata || {};
-    const nextMeta = { ...existingMeta };
-    delete nextMeta.avatar_data_url;
 
-    const { data, error } = await sb.auth.updateUser({ data: nextMeta });
+    const { data, error } = await sb.auth.updateUser({
+      data: {
+        ...existingMeta,
+        avatar_data_url: null,
+      },
+    });
     if (error) throw error;
 
-    currentUser = data?.user || currentUser;
+    currentUser = data?.user || {
+      ...currentUser,
+      user_metadata: {
+        ...existingMeta,
+        avatar_data_url: null,
+      },
+    };
+
     setStoredProfileAvatar(currentUser.id, "");
     const input = document.getElementById("profilePictureInput");
     if (input) input.value = "";
@@ -280,7 +299,10 @@ async function removeProfilePicture() {
     populateProfileSection(currentUser);
     showProfileSaveStatus("Profile picture removed.", "success");
   } catch (error) {
-    showProfileSaveStatus(error?.message || "Could not remove profile picture.", "error");
+    showProfileSaveStatus(
+      error?.message || "Could not remove profile picture.",
+      "error"
+    );
   }
 }
 
@@ -1959,21 +1981,30 @@ function updateHeaderUser(user) {
     .slice(0, 2)
     .join("");
 
-  const avatar = getProfileAvatar(user);
-  applyAvatarToElement(document.getElementById("userAvatar"), avatar, initials || "?");
+  const avatar = typeof getProfileAvatar === "function"
+    ? getProfileAvatar(user)
+    : getStoredProfileAvatar(user.id);
+  forEachDuplicateId("userAvatar", (el) => {
+    applyAvatarToElement(el, avatar, initials || "?");
+  });
   // Show name if available, otherwise show email
   const displayName =
     meta.full_name && meta.full_name !== email ? meta.full_name : email;
-  document.getElementById("userEmail").textContent = displayName;
-  document.getElementById("guestNav").classList.add("hidden");
-  document.getElementById("userNav").classList.remove("hidden");
+  forEachDuplicateId("userEmail", (el) => {
+    el.textContent = displayName;
+  });
+  forEachDuplicateId("guestNav", (el) => {
+    el.classList.add("hidden");
+  });
+  forEachDuplicateId("userNav", (el) => {
+    el.classList.remove("hidden");
+  });
 
   // Show role badge next to avatar
-  let badge = document.getElementById("userRoleBadge");
-  if (badge) {
+  forEachDuplicateId("userRoleBadge", (badge) => {
     badge.textContent = ROLE_LABELS[role] || role;
     badge.dataset.role = role;
-  }
+  });
 
   // Show/hide Payroll tab based on role
   const payrollLink = document.querySelector('[data-section="payroll"]');
@@ -1999,8 +2030,12 @@ function updateHeaderUser(user) {
 }
 
 function resetHeaderToGuest() {
-  document.getElementById("guestNav").classList.remove("hidden");
-  document.getElementById("userNav").classList.add("hidden");
+  forEachDuplicateId("guestNav", (el) => {
+    el.classList.remove("hidden");
+  });
+  forEachDuplicateId("userNav", (el) => {
+    el.classList.add("hidden");
+  });
 }
 
 /* ===========================
