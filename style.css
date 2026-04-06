@@ -3457,6 +3457,10 @@ body {
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
+  #userNav.hidden,
+#guestNav.hidden {
+  display: none !important;
+}
 }
 
 @media (max-width: 480px) {
