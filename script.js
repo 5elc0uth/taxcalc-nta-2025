@@ -104,8 +104,12 @@ function setStoredProfileAvatar(userId, value) {
 function getProfileAvatar(user) {
   if (!user) return "";
   const rawMetaAvatar = user.user_metadata?.avatar_data_url;
+<<<<<<< HEAD
   const metaAvatar =
     typeof rawMetaAvatar === "string" ? rawMetaAvatar.trim() : "";
+=======
+  const metaAvatar = typeof rawMetaAvatar === "string" ? rawMetaAvatar.trim() : "";
+>>>>>>> a7385f82dd4087154157b94e49d661819d05c973
   const cachedAvatar = getStoredProfileAvatar(user.id);
 
   if (metaAvatar && metaAvatar !== cachedAvatar) {
@@ -317,7 +321,11 @@ async function removeProfilePicture() {
   } catch (error) {
     showProfileSaveStatus(
       error?.message || "Could not remove profile picture.",
+<<<<<<< HEAD
       "error",
+=======
+      "error"
+>>>>>>> a7385f82dd4087154157b94e49d661819d05c973
     );
   }
 }
@@ -2017,10 +2025,16 @@ function updateHeaderUser(user) {
     .slice(0, 2)
     .join("");
 
+<<<<<<< HEAD
   const avatar =
     typeof getProfileAvatar === "function"
       ? getProfileAvatar(user)
       : getStoredProfileAvatar(user.id);
+=======
+  const avatar = typeof getProfileAvatar === "function"
+    ? getProfileAvatar(user)
+    : getStoredProfileAvatar(user.id);
+>>>>>>> a7385f82dd4087154157b94e49d661819d05c973
   forEachDuplicateId("userAvatar", (el) => {
     applyAvatarToElement(el, avatar, initials || "?");
   });
@@ -2036,6 +2050,12 @@ function updateHeaderUser(user) {
   forEachDuplicateId("userNav", (el) => {
     el.classList.remove("hidden");
   });
+<<<<<<< HEAD
+=======
+  closeMobileNav();
+  document.getElementById("guestNav")?.classList.remove("mobile-open");
+  document.getElementById("userNav")?.classList.remove("mobile-open");
+>>>>>>> a7385f82dd4087154157b94e49d661819d05c973
 
   // Show role badge next to avatar
   forEachDuplicateId("userRoleBadge", (badge) => {
@@ -2073,6 +2093,12 @@ function resetHeaderToGuest() {
   forEachDuplicateId("userNav", (el) => {
     el.classList.add("hidden");
   });
+<<<<<<< HEAD
+=======
+  closeMobileNav();
+  document.getElementById("guestNav")?.classList.remove("mobile-open");
+  document.getElementById("userNav")?.classList.remove("mobile-open");
+>>>>>>> a7385f82dd4087154157b94e49d661819d05c973
 }
 
 /* ===========================
